@@ -2,7 +2,8 @@ import express, { Express, Request, Response } from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import connectDB from './database';
-import authRoutes from './routes/authRoutes'
+import authRoutes from './routes/authRoutes';
+import workoutRoutes from './routes/workoutRoutes';
 
 dotenv.config();
 
@@ -18,7 +19,8 @@ app.get('/', (req: Request, res: Response) => {
 });
 
 // Rotas da API
-app.use('/api/auth', authRoutes)
+app.use('/api/auth', authRoutes);
+app.use('/api/workouts', workoutRoutes);
 
 const PORT = process.env.PORT || 5000;
 
