@@ -4,6 +4,7 @@ import {
   createWorkout,
   getMyWorkouts,
   getAvailableExercises,
+  deleteWorkout,
 } from '../controllers/workoutController';
 
 const router = Router();
@@ -17,5 +18,6 @@ router.get(
 );
 router.post('/', protect, createWorkout); // Cria treino
 router.get('/', protect, getMyWorkouts); // Lista treinos do usuário
+router.delete('/:id', protect, deleteWorkout)
 
 export default router;

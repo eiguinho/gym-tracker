@@ -41,7 +41,7 @@ const exercises = [
 
 const seedData = async () => {
   try {
-    await Exercise.deleteMany(); // Limpa o banco antes pra não duplicar
+    await Exercise.deleteMany();
     await Exercise.insertMany(exercises);
     console.log('✅ Exercícios Padrão Inseridos!');
     process.exit();
