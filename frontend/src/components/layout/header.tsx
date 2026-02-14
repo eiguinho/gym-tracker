@@ -7,7 +7,7 @@ import { useAuth } from '@/providers/auth-provider'
 
 const navItems = [
   { name: 'Home', href: '/dashboard' },
-  { name: 'Meus Treinos', href: '/dashboard/treinos' },
+  { name: 'Meus Treinos', href: '/dashboard/workouts' },
   { name: 'Exercícios', href: '/dashboard/exercicios' },
 ]
 
