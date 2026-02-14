@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { useAuth } from '@/providers/auth-provider'
 
 const navItems = [
   { name: 'Home', href: '/dashboard' },
@@ -12,6 +13,7 @@ const navItems = [
 
 export function DashboardHeader() {
   const pathname = usePathname()
+  const { user } = useAuth()
 
   return (
     <header className="border-b border-border bg-background">
@@ -42,6 +44,7 @@ export function DashboardHeader() {
         </nav>
 
         <div className="flex items-center gap-4">
+          <h1>Olá, {user?.name} 👋</h1>
           <ThemeToggle />
         </div>
       </div>
