@@ -7,6 +7,7 @@ import { Workout } from '@/types/workout'
 import { WorkoutCard } from '@/components/workouts/workout-card'
 import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
+import { Spinner } from '@/components/ui/spinner'
 
 export default function WorkoutsPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
@@ -27,6 +28,19 @@ export default function WorkoutsPage() {
     loadWorkouts()
   }, [])
 
+  async function handleDelete(id: string) {
+    if (!confirm('Tem certeza que deseja excluir este treino?')) return
+
+    try {
+      await workoutService.delete(id)
+
+      setWorkouts((prev) => prev.filter((workout) => workout._id !== id))
+    } catch (error) {
+      alert('Erro ao excluir treino')
+      console.error(error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-950">
       <div className="mx-auto max-w-5xl">
@@ -45,9 +59,7 @@ export default function WorkoutsPage() {
         />
 
         {loading ? (
-          <div className="flex h-64 items-center justify-center">
-             <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-          </div>
+          <Spinner />
         ) : workouts.length === 0 ? (
           
           <EmptyState 
@@ -66,7 +78,7 @@ export default function WorkoutsPage() {
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {workouts.map((workout) => (
-              <WorkoutCard key={workout._id} workout={workout} />
+              <WorkoutCard key={workout._id} workout={workout} onDelete={handleDelete}/>
             ))}
           </div>
         )}
