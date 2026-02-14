@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import "./globals.css";
-import { ThemeProvider } from '@/components/context/theme-provider'
+import { ThemeProvider } from '@/providers/theme-provider'
+import { AuthProvider } from '../providers/auth-provider'
 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -25,7 +26,9 @@ export default function RootLayout({
         className={`${jakarta.variable} font-sans antialiased`}
       >
         <ThemeProvider>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
