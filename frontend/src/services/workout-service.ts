@@ -16,5 +16,13 @@ export const workoutService = {
   create: async (data: CreateWorkoutDTO): Promise<Workout> => {
     const response = await api.post('/workouts', data)
     return response.data
+  },
+  getById: async (id: string): Promise<Workout> => {
+    const response = await api.get(`/workouts/${id}`)
+    return response.data
+  },
+  update: async (id: string, data: Partial<CreateWorkoutDTO>): Promise<Workout> => {
+    const response = await api.put(`/workouts/${id}`, data)
+    return response.data
   }
 }

@@ -1,8 +1,8 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { CreateWorkoutModal } from '@/components/workouts/create-workout-modal'
+import { EditWorkoutModal } from '@/components/workouts/edit-workout-modal'
 import { workoutService } from '@/services/workout-service'
 import { Workout } from '@/types/workout'
 import { WorkoutCard } from '@/components/workouts/workout-card'
@@ -14,6 +14,7 @@ export default function WorkoutsPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [loading, setLoading] = useState(true)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [editingWorkoutId, setEditingWorkoutId] = useState<string | null>(null)
 
   useEffect(() => {
     async function loadWorkouts() {
@@ -35,7 +36,6 @@ export default function WorkoutsPage() {
 
     try {
       await workoutService.delete(id)
-
       setWorkouts((prev) => prev.filter((workout) => workout._id !== id))
     } catch (error) {
       alert('Erro ao excluir treino')
@@ -72,7 +72,6 @@ export default function WorkoutsPage() {
         {loading ? (
           <Spinner />
         ) : workouts.length === 0 ? (
-          
           <EmptyState 
             title="Nenhum treino encontrado"
             description="Você ainda não criou nenhuma rotina de treinos. Comece agora!"
@@ -85,11 +84,15 @@ export default function WorkoutsPage() {
               </button>
             }
           />
-          
         ) : (
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {workouts.map((workout) => (
-              <WorkoutCard key={workout._id} workout={workout} onDelete={handleDelete}/>
+              <WorkoutCard 
+                key={workout._id} 
+                workout={workout} 
+                onDelete={handleDelete}
+                onEdit={(id) => setEditingWorkoutId(id)}
+              />
             ))}
           </div>
         )}
@@ -98,6 +101,15 @@ export default function WorkoutsPage() {
           onClose={() => setIsCreateModalOpen(false)}
           onSuccess={() => {
             setIsCreateModalOpen(false)
+            fetchWorkouts()
+          }}
+        />
+        <EditWorkoutModal 
+          isOpen={!!editingWorkoutId}
+          workoutId={editingWorkoutId}
+          onClose={() => setEditingWorkoutId(null)}
+          onSuccess={() => {
+            setEditingWorkoutId(null)
             fetchWorkouts()
           }}
         />
