@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { CreateWorkoutModal } from '@/components/workouts/create-workout-modal'
 import { workoutService } from '@/services/workout-service'
 import { Workout } from '@/types/workout'
 import { WorkoutCard } from '@/components/workouts/workout-card'
@@ -12,6 +13,7 @@ import { Spinner } from '@/components/ui/spinner'
 export default function WorkoutsPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [loading, setLoading] = useState(true)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   useEffect(() => {
     async function loadWorkouts() {
@@ -41,6 +43,15 @@ export default function WorkoutsPage() {
     }
   }
 
+  const fetchWorkouts = async () => {
+    try {
+      const data = await workoutService.getAll()
+      setWorkouts(data)
+    } catch (error) {
+      console.error(error)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-950">
       <div className="mx-auto max-w-5xl">
@@ -49,12 +60,12 @@ export default function WorkoutsPage() {
           title="Meus Treinos" 
           description="Gerencie e acompanhe suas rotinas de exercício"
           action={
-            <Link 
-              href="/dashboard/workouts/new" 
+            <button 
+              onClick={() => setIsCreateModalOpen(true)}
               className="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors shadow-sm"
             >
               + Novo Treino
-            </Link>
+            </button>
           }
         />
 
@@ -66,12 +77,12 @@ export default function WorkoutsPage() {
             title="Nenhum treino encontrado"
             description="Você ainda não criou nenhuma rotina de treinos. Comece agora!"
             action={
-              <Link 
-                href="/dashboard/workouts/new"
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
                 className="text-indigo-600 hover:text-indigo-500 font-medium text-sm"
               >
                 Criar primeiro treino &rarr;
-              </Link>
+              </button>
             }
           />
           
@@ -82,6 +93,14 @@ export default function WorkoutsPage() {
             ))}
           </div>
         )}
+        <CreateWorkoutModal 
+          isOpen={isCreateModalOpen} 
+          onClose={() => setIsCreateModalOpen(false)}
+          onSuccess={() => {
+            setIsCreateModalOpen(false)
+            fetchWorkouts()
+          }}
+        />
       </div>
     </div>
   )
