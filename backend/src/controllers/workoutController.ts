@@ -18,6 +18,27 @@ export const getAvailableExercises = async (req: Request, res: Response) => {
   }
 };
 
+export const getWorkoutById = async (req: any, res: Response): Promise<any> => {
+  try {
+    const workout = await Workout.findById(req.params.id).populate(
+      'exercises.exercise',
+      'name targetMuscles equipment'
+    );
+
+    if (!workout) {
+      return res.status(404).json({ message: 'Treino não encontrado' });
+    }
+
+    if (workout.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
+
+    res.json(workout);
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao buscar o treino' });
+  }
+};
+
 export const createWorkout = async (req: any, res: Response): Promise<any> => {
   try {
     const { title, exercises } = req.body;
@@ -89,3 +110,39 @@ export const deleteWorkout = async (req: Request, res: Response) => {
     res.status(500).json({ message: 'Erro ao remover treino' })
   }
 }
+
+export const updateWorkout = async (req: any, res: Response): Promise<any> => {
+  try {
+    const { title, exercises } = req.body;
+    const workout = await Workout.findById(req.params.id);
+
+    if (!workout) {
+      return res.status(404).json({ message: 'Treino não encontrado' });
+    }
+
+    if (workout.user.toString() !== req.user._id.toString()) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
+
+    if (title) workout.title = title;
+    
+    if (exercises && exercises.length > 0) {
+      const exerciseIds = exercises.map((e: any) => e.exercise);
+      const uniqueIds = new Set(exerciseIds);
+      if (exerciseIds.length !== uniqueIds.size) {
+        return res.status(400).json({
+          message: 'Você não pode adicionar o mesmo exercício duas vezes no treino.',
+        });
+      }
+
+      workout.exercises = exercises;
+      
+      workout.intensityLevel = calculateIntensity(exercises.length) as any;
+    }
+
+    const updatedWorkout = await workout.save();
+    res.json(updatedWorkout);
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao atualizar o treino', error });
+  }
+};
