@@ -19,3 +19,12 @@ export interface Workout {
   intensityLevel: 'Leve' | 'Moderado' | 'Intenso' | 'Insano'
   createdAt: string
 }
+
+export interface CreateWorkoutDTO {
+  title: string
+  exercises: {
+    exercise: string
+    sets: number
+    reps: string
+  }[]
+}
