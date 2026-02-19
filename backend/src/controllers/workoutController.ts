@@ -9,6 +9,12 @@ const calculateIntensity = (numExercises: number): string => {
   return 'Insano (Cuidado!)';
 };
 
+const hasDuplicateExercises = (exercises: any[]): boolean => {
+  const exerciseIds = exercises.map((e: any) => e.exercise);
+  const uniqueIds = new Set(exerciseIds);
+  return exerciseIds.length !== uniqueIds.size;
+};
+
 export const getAvailableExercises = async (req: Request, res: Response) => {
   try {
     const exercises = await Exercise.find({}).sort({ name: 1 });
@@ -25,13 +31,8 @@ export const getWorkoutById = async (req: any, res: Response): Promise<any> => {
       'name targetMuscles equipment'
     );
 
-    if (!workout) {
-      return res.status(404).json({ message: 'Treino não encontrado' });
-    }
-
-    if (workout.user.toString() !== req.user._id.toString()) {
-      return res.status(401).json({ message: 'Não autorizado' });
-    }
+    if (!workout) return res.status(404).json({ message: 'Treino não encontrado' });
+    if (workout.user.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Não autorizado' });
 
     res.json(workout);
   } catch (error) {
@@ -44,29 +45,18 @@ export const createWorkout = async (req: any, res: Response): Promise<any> => {
     const { title, exercises } = req.body;
 
     if (!exercises || exercises.length === 0) {
-      return res
-        .status(400)
-        .json({ message: 'O treino precisa ter pelo menos um exercício.' });
+      return res.status(400).json({ message: 'O treino precisa ter pelo menos um exercício.' });
     }
 
-    const exerciseIds = exercises.map((e: any) => e.exercise);
-    const uniqueIds = new Set(exerciseIds);
-    if (exerciseIds.length !== uniqueIds.size) {
-      return res
-        .status(400)
-        .json({
-          message:
-            'Você não pode adicionar o mesmo exercício duas vezes no treino.',
-        });
+    if (hasDuplicateExercises(exercises)) {
+      return res.status(400).json({ message: 'Você não pode adicionar o mesmo exercício duas vezes no treino.' });
     }
-
-    const intensity = calculateIntensity(exercises.length);
 
     const workout = await Workout.create({
       user: req.user._id,
       title,
       exercises,
-      intensityLevel: intensity,
+      intensityLevel: calculateIntensity(exercises.length),
     });
 
     res.status(201).json(workout);
@@ -79,64 +69,44 @@ export const getMyWorkouts = async (req: any, res: Response) => {
   try {
     const workouts = await Workout.find({ user: req.user._id }).populate(
       'exercises.exercise',
-      'name targetMuscles',
+      'name targetMuscles'
     );
-
     res.json(workouts);
   } catch (error) {
     res.status(500).json({ message: 'Erro ao buscar treinos' });
   }
 };
 
-export const deleteWorkout = async (req: Request, res: Response) => {
+export const deleteWorkout = async (req: Request, res: Response): Promise<any> => {
   try {
-    const { id } = req.params
+    const workout = await Workout.findById(req.params.id);
 
-    const workout = await Workout.findById(id)
+    if (!workout) return res.status(404).json({ message: 'Treino não encontrado' });
+    if (workout.user.toString() !== (req as any).user.id) return res.status(401).json({ message: 'Não autorizado' });
 
-    if (!workout) {
-      return res.status(404).json({ message: 'Treino não encontrado' })
-    }
-
-    if (workout.user.toString() !== req.user.id) {
-      return res.status(401).json({ message: 'Não autorizado' })
-    }
-
-    await workout.deleteOne()
-
-    res.status(200).json({ message: 'Treino removido com sucesso' })
+    await workout.deleteOne();
+    res.status(200).json({ message: 'Treino removido com sucesso' });
   } catch (error) {
-    console.error(error)
-    res.status(500).json({ message: 'Erro ao remover treino' })
+    res.status(500).json({ message: 'Erro ao remover treino' });
   }
-}
+};
 
 export const updateWorkout = async (req: any, res: Response): Promise<any> => {
   try {
     const { title, exercises } = req.body;
     const workout = await Workout.findById(req.params.id);
 
-    if (!workout) {
-      return res.status(404).json({ message: 'Treino não encontrado' });
-    }
-
-    if (workout.user.toString() !== req.user._id.toString()) {
-      return res.status(401).json({ message: 'Não autorizado' });
-    }
+    if (!workout) return res.status(404).json({ message: 'Treino não encontrado' });
+    if (workout.user.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Não autorizado' });
 
     if (title) workout.title = title;
     
     if (exercises && exercises.length > 0) {
-      const exerciseIds = exercises.map((e: any) => e.exercise);
-      const uniqueIds = new Set(exerciseIds);
-      if (exerciseIds.length !== uniqueIds.size) {
-        return res.status(400).json({
-          message: 'Você não pode adicionar o mesmo exercício duas vezes no treino.',
-        });
+      if (hasDuplicateExercises(exercises)) {
+        return res.status(400).json({ message: 'Você não pode adicionar o mesmo exercício duas vezes no treino.' });
       }
 
       workout.exercises = exercises;
-      
       workout.intensityLevel = calculateIntensity(exercises.length) as any;
     }
 
