@@ -64,12 +64,28 @@ export default function CalendarPage() {
         await workoutService.scheduleWorkout(workoutId, targetDate)
         const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
         setLogs(logsData)
-      } catch (error) {
-        console.error("Erro ao agendar:", error)
-        alert('Erro ao agendar o treino. Tente novamente.')
+      } catch (error: any) {
+        const errorMessage = error.response?.data?.message || 'Erro ao agendar o treino. Tente novamente.'
+        alert(errorMessage)
       } finally {
         setIsUpdating(false)
       }
+    }
+  }
+
+  const handleDeleteLog = async (logId: string) => {
+    if (!confirm('Tem certeza que deseja remover este treino do calendário?')) return;
+    
+    setIsUpdating(true)
+    try {
+      await workoutService.deleteCalendarLog(logId)
+      const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
+      setLogs(logsData)
+    } catch (error) {
+      console.error("Erro ao remover:", error)
+      alert('Erro ao remover o treino do calendário.')
+    } finally {
+      setIsUpdating(false)
     }
   }
 
@@ -141,6 +157,7 @@ export default function CalendarPage() {
                         day={day} 
                         isCurrentMonth={isCurrentMonth} 
                         dayLogs={dayLogs} 
+                        onDeleteLog={handleDeleteLog}
                       />
                     )
                   })}

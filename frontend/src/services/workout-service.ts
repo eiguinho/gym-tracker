@@ -38,4 +38,8 @@ export const workoutService = {
     const response = await api.put(`/workout-logs/${logId}`, { status, durationMinutes })
     return response.data
   },
+  deleteCalendarLog: async (logId: string) => {
+    const response = await api.delete(`/workout-logs/${logId}`)
+    return response.data
+  },
 }

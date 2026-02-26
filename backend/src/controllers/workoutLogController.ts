@@ -9,6 +9,21 @@ export const createWorkoutLog = async (req: any, res: Response): Promise<any> =>
       return res.status(400).json({ message: 'Treino e data são obrigatórios.' });
     }
 
+    const targetDate = new Date(date);
+    const startOfDay = new Date(targetDate.setUTCHours(0, 0, 0, 0));
+    const endOfDay = new Date(targetDate.setUTCHours(23, 59, 59, 999));
+
+    const existingLog = await WorkoutLog.findOne({
+      user: req.user._id,
+      date: { $gte: startOfDay, $lte: endOfDay }
+    });
+
+    if (existingLog) {
+      return res.status(400).json({ 
+        message: 'Você já tem um treino agendado para este dia. Remova-o antes de adicionar outro.' 
+      });
+    }
+
     const log = await WorkoutLog.create({
       user: req.user._id,
       workout,
