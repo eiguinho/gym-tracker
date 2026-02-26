@@ -4,6 +4,7 @@ import cors from 'cors';
 import connectDB from './database';
 import authRoutes from './routes/authRoutes';
 import workoutRoutes from './routes/workoutRoutes';
+import workoutLogRoutes from './routes/workoutLogRoutes';
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.get('/', (req: Request, res: Response) => {
 // Rotas da API
 app.use('/api/auth', authRoutes);
 app.use('/api/workouts', workoutRoutes);
+app.use('/api/workout-logs', workoutLogRoutes);
 
 const PORT = process.env.PORT || 5000;
 
