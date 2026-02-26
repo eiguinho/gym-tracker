@@ -5,6 +5,7 @@ import connectDB from './database';
 import authRoutes from './routes/authRoutes';
 import workoutRoutes from './routes/workoutRoutes';
 import workoutLogRoutes from './routes/workoutLogRoutes';
+import statsRoutes from './routes/statsRoutes';
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.get('/', (req: Request, res: Response) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/workout-logs', workoutLogRoutes);
+app.use('/api/stats', statsRoutes);
 
 const PORT = process.env.PORT || 5000;
 

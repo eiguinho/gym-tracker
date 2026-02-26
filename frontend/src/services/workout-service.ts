@@ -46,4 +46,8 @@ export const workoutService = {
     const response = await api.put(`/workout-logs/${logId}`, { date: newDate })
     return response.data
   },
+  getDashboardStats: async () => {
+    const response = await api.get('/stats/dashboard')
+    return response.data
+  },
 }
