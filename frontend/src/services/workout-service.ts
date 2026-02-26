@@ -42,4 +42,8 @@ export const workoutService = {
     const response = await api.delete(`/workout-logs/${logId}`)
     return response.data
   },
+  moveCalendarLog: async (logId: string, newDate: Date) => {
+    const response = await api.put(`/workout-logs/${logId}`, { date: newDate })
+    return response.data
+  },
 }

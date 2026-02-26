@@ -66,9 +66,28 @@ export const updateWorkoutLog = async (req: any, res: Response): Promise<any> =>
     if (!log) return res.status(404).json({ message: 'Registro não encontrado' });
     if (log.user.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Não autorizado' });
 
+    if (date) {
+      const targetDate = new Date(date);
+      const startOfDay = new Date(targetDate.setUTCHours(0, 0, 0, 0));
+      const endOfDay = new Date(targetDate.setUTCHours(23, 59, 59, 999));
+
+      const existingLog = await WorkoutLog.findOne({
+        user: req.user._id,
+        date: { $gte: startOfDay, $lte: endOfDay },
+        _id: { $ne: log._id }
+      });
+
+      if (existingLog) {
+        return res.status(400).json({ 
+          message: 'Já existe um treino neste dia. Remova-o antes de mover para cá.' 
+        });
+      }
+      
+      log.date = date;
+    }
+
     if (status) log.status = status;
     if (durationMinutes) log.durationMinutes = durationMinutes;
-    if (date) log.date = date;
 
     const updatedLog = await log.save();
     res.json(updatedLog);

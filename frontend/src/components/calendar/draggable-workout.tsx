@@ -12,7 +12,10 @@ interface DraggableWorkoutProps {
 export function DraggableWorkout({ workout }: DraggableWorkoutProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: `workout-${workout._id}`, 
-    data: { workout } 
+    data: { 
+      type: 'sidebar-workout',
+      workout 
+    }
   })
 
   const style = transform ? {

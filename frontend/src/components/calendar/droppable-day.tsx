@@ -4,6 +4,7 @@ import { useDroppable } from '@dnd-kit/core'
 import { WorkoutLog } from '@/types/workout'
 import { format, isToday } from 'date-fns'
 import { X } from 'lucide-react'
+import { DraggableScheduledLog } from './draggable-scheduled-log'
 
 interface DroppableDayProps {
   day: Date
@@ -40,23 +41,11 @@ export function DroppableDay({ day, isCurrentMonth, dayLogs, onDeleteLog }: Drop
       
       <div className="mt-2 space-y-1">
         {dayLogs.map(log => (
-          <div 
+          <DraggableScheduledLog 
             key={log._id} 
-            className="group relative flex items-center justify-between text-xs p-1.5 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 rounded border border-indigo-100 dark:border-indigo-800/50 overflow-hidden"
-          >
-            <span className="truncate font-medium pr-5">{log.workout?.title}</span>
-            
-            <button 
-              onClick={(e) => {
-                e.stopPropagation()
-                onDeleteLog(log._id)
-              }}
-              className="absolute right-1 opacity-0 group-hover:opacity-100 p-0.5 text-indigo-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 rounded transition-all bg-indigo-50 dark:bg-transparent"
-              title="Remover do calendário"
-            >
-              <X size={14} />
-            </button>
-          </div>
+            log={log} 
+            onDelete={onDeleteLog} 
+          />
         ))}
       </div>
     </div>

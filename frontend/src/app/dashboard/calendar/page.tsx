@@ -56,16 +56,24 @@ export default function CalendarPage() {
     const { active, over } = event
     
     if (over && over.data.current && active.data.current) {
-      const workoutId = active.data.current.workout._id
       const targetDate = over.data.current.date
+      const dragType = active.data.current.type
 
       setIsUpdating(true)
       try {
-        await workoutService.scheduleWorkout(workoutId, targetDate)
+        if (dragType === 'sidebar-workout') {
+          const workoutId = active.data.current.workout._id
+          await workoutService.scheduleWorkout(workoutId, targetDate)
+        } 
+        else if (dragType === 'scheduled-log') {
+          const logId = active.data.current.log._id
+          await workoutService.moveCalendarLog(logId, targetDate)
+        }
+
         const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
         setLogs(logsData)
       } catch (error: any) {
-        const errorMessage = error.response?.data?.message || 'Erro ao agendar o treino. Tente novamente.'
+        const errorMessage = error.response?.data?.message || 'Erro ao processar a ação. Tente novamente.'
         alert(errorMessage)
       } finally {
         setIsUpdating(false)
