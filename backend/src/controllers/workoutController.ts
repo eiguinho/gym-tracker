@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import Workout from '../models/Workout';
 import Exercise from '../models/Exercise';
+import WorkoutLog from '../models/WorkoutLog';
 
 const calculateIntensity = (numExercises: number): string => {
   if (numExercises <= 3) return 'Leve';
@@ -84,8 +85,10 @@ export const deleteWorkout = async (req: Request, res: Response): Promise<any> =
     if (!workout) return res.status(404).json({ message: 'Treino não encontrado' });
     if (workout.user.toString() !== (req as any).user.id) return res.status(401).json({ message: 'Não autorizado' });
 
+    await WorkoutLog.deleteMany({ workout: workout._id });
     await workout.deleteOne();
-    res.status(200).json({ message: 'Treino removido com sucesso' });
+    
+    res.status(200).json({ message: 'Treino e agendamentos removidos com sucesso' });
   } catch (error) {
     res.status(500).json({ message: 'Erro ao remover treino' });
   }
