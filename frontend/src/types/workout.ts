@@ -28,3 +28,16 @@ export interface CreateWorkoutDTO {
     reps: string
   }[]
 }
+
+export interface WorkoutLog {
+  _id: string;
+  user: string;
+  workout: {
+    _id: string;
+    title: string;
+    intensityLevel: string;
+  };
+  date: string;
+  status: 'planned' | 'completed' | 'skipped';
+  durationMinutes?: number;
+}

@@ -24,5 +24,18 @@ export const workoutService = {
   update: async (id: string, data: Partial<CreateWorkoutDTO>): Promise<Workout> => {
     const response = await api.put(`/workouts/${id}`, data)
     return response.data
-  }
+  },
+  // --- MÉTODOS DO CALENDÁRIO (WORKOUT LOGS) ---
+  scheduleWorkout: async (workoutId: string, date: Date) => {
+    const response = await api.post('/workout-logs', { workout: workoutId, date })
+    return response.data
+  },
+  getCalendarLogs: async (startDate: Date, endDate: Date) => {
+    const response = await api.get(`/workout-logs?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`)
+    return response.data
+  },
+  updateLogStatus: async (logId: string, status: string, durationMinutes?: number) => {
+    const response = await api.put(`/workout-logs/${logId}`, { status, durationMinutes })
+    return response.data
+  },
 }
