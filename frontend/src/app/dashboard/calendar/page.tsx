@@ -14,7 +14,9 @@ import {
 } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { DndContext, DragEndEvent } from '@dnd-kit/core'
+
+import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
+import { CheckInModal } from '@/components/calendar/check-in-modal'
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -22,6 +24,15 @@ export default function CalendarPage() {
   const [logs, setLogs] = useState<WorkoutLog[]>([])
   const [loading, setLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [selectedLogForCheckIn, setSelectedLogForCheckIn] = useState<WorkoutLog | null>(null)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 5, 
+      },
+    })
+  )
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(monthStart)
@@ -98,7 +109,7 @@ export default function CalendarPage() {
   }
 
   return (
-    <DndContext onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-950">
         <div className="mx-auto max-w-7xl">
           
@@ -166,6 +177,7 @@ export default function CalendarPage() {
                         isCurrentMonth={isCurrentMonth} 
                         dayLogs={dayLogs} 
                         onDeleteLog={handleDeleteLog}
+                        onClickLog={(log) => setSelectedLogForCheckIn(log)}
                       />
                     )
                   })}
@@ -176,6 +188,17 @@ export default function CalendarPage() {
 
           </div>
         </div>
+        
+        <CheckInModal 
+          isOpen={!!selectedLogForCheckIn}
+          log={selectedLogForCheckIn}
+          onClose={() => setSelectedLogForCheckIn(null)}
+          onSuccess={async () => {
+            setSelectedLogForCheckIn(null)
+            const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
+            setLogs(logsData)
+          }}
+        />
       </div>
     </DndContext>
   )

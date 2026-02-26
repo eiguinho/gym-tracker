@@ -11,9 +11,10 @@ interface DroppableDayProps {
   isCurrentMonth: boolean
   dayLogs: WorkoutLog[]
   onDeleteLog: (logId: string) => void
+  onClickLog: (log: WorkoutLog) => void
 }
 
-export function DroppableDay({ day, isCurrentMonth, dayLogs, onDeleteLog }: DroppableDayProps) {
+export function DroppableDay({ day, isCurrentMonth, dayLogs, onDeleteLog, onClickLog }: DroppableDayProps) {
   const isTodayDate = isToday(day)
   
   const { isOver, setNodeRef } = useDroppable({
@@ -45,6 +46,7 @@ export function DroppableDay({ day, isCurrentMonth, dayLogs, onDeleteLog }: Drop
             key={log._id} 
             log={log} 
             onDelete={onDeleteLog} 
+            onClick={onClickLog}
           />
         ))}
       </div>
