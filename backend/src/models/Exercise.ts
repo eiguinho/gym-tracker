@@ -6,6 +6,7 @@ export interface IExercise extends Document {
   equipment: string; // Ex: 'Barra', 'Halter', 'Máquina'
   difficulty: 'Iniciante' | 'Intermediário' | 'Avançado'; // Útil pra IA futura
   videoUrl?: string; // Futuro: Link pro vídeo ensinando
+  gifUrl: { type: String },
 }
 
 const ExerciseSchema: Schema = new Schema(
