@@ -5,14 +5,14 @@ import { Input } from '@/components/ui/input'
 interface ExerciseFormRowProps {
   index: number
   row: { exercise: string; sets: number; minReps: number | string; maxReps: number | string }
-  availableExercises: Exercise[]
+  groupedExercises: Record<string, Exercise[]> 
   allSelectedExercises: string[]
   onChange: (index: number, field: string, value: string | number) => void
   onRemove: (index: number) => void
   canRemove: boolean
 }
 
-export function ExerciseFormRow({ index, row, availableExercises, allSelectedExercises, onChange, onRemove, canRemove }: ExerciseFormRowProps) {
+export function ExerciseFormRow({ index, row, groupedExercises, allSelectedExercises, onChange, onRemove, canRemove }: ExerciseFormRowProps) {
   return (
     <div className="flex items-end gap-3 rounded-xl border border-gray-200 bg-gray-50/50 p-3 dark:border-gray-800 dark:bg-gray-900/50">
       
@@ -27,14 +27,18 @@ export function ExerciseFormRow({ index, row, availableExercises, allSelectedExe
           required
         >
           <option value="">Selecione...</option>
-          {availableExercises.map((ex) => (
-            <option 
-              key={ex._id} 
-              value={ex._id} 
-              disabled={allSelectedExercises.includes(ex._id) && row.exercise !== ex._id}
-            >
-              {ex.name}
-            </option>
+          {Object.entries(groupedExercises).map(([muscleGroup, exercises]) => (
+            <optgroup key={muscleGroup} label={muscleGroup}>
+              {exercises.map((ex) => (
+                <option 
+                  key={ex._id} 
+                  value={ex._id} 
+                  disabled={allSelectedExercises.includes(ex._id) && row.exercise !== ex._id}
+                >
+                  {ex.name}
+                </option>
+              ))}
+            </optgroup>
           ))}
         </select>
       </div>

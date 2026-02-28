@@ -16,14 +16,29 @@ interface CreateWorkoutModalProps {
 
 export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkoutModalProps) {
   const [loading, setLoading] = useState(false)
-  const [availableExercises, setAvailableExercises] = useState<Exercise[]>([])
+  
+  const [groupedExercises, setGroupedExercises] = useState<Record<string, Exercise[]>>({})
   
   const [title, setTitle] = useState('')
   const [workoutExercises, setWorkoutExercises] = useState([{ exercise: '', sets: 3, minReps: 8, maxReps: 12 }])
 
   useEffect(() => {
     if (isOpen) {
-      workoutService.getExercises().then(setAvailableExercises).catch(console.error)
+      workoutService.getExercises().then((exercises) => {
+        const grouped = exercises.reduce((acc, exercise) => {
+          const primaryMuscle = exercise.targetMuscles[0] || 'Outros'
+          if (!acc[primaryMuscle]) acc[primaryMuscle] = []
+          acc[primaryMuscle].push(exercise)
+          return acc
+        }, {} as Record<string, Exercise[]>)
+        
+        const sortedGroups = Object.keys(grouped).sort().reduce((acc, key) => {
+          acc[key] = grouped[key]
+          return acc
+        }, {} as Record<string, Exercise[]>)
+
+        setGroupedExercises(sortedGroups)
+      }).catch(console.error)
     } else {
       setTitle('')
       setWorkoutExercises([{ exercise: '', sets: 3, minReps: 8, maxReps: 12 }])
@@ -88,9 +103,14 @@ export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkout
           <div className="space-y-3">
             {workoutExercises.map((row, index) => (
               <ExerciseFormRow 
-                key={index} index={index} row={row} availableExercises={availableExercises} 
+                key={index} 
+                index={index} 
+                row={row} 
+                groupedExercises={groupedExercises} 
                 allSelectedExercises={workoutExercises.map(ex => ex.exercise)}
-                onChange={handleExerciseChange} onRemove={removeExerciseRow} canRemove={workoutExercises.length > 1}
+                onChange={handleExerciseChange} 
+                onRemove={removeExerciseRow} 
+                canRemove={workoutExercises.length > 1}
               />
             ))}
           </div>
