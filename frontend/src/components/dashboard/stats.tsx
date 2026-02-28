@@ -24,7 +24,7 @@ export function StatsGrid({ summary }: StatsGridProps) {
         icon={<CalendarDays size={24} />}
         footer={
           <span className="text-primary">
-            Dados dos últimos 7 dias
+            Dados do mês atual
           </span>
         }
       />

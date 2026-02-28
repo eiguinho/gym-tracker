@@ -4,18 +4,20 @@ import WorkoutLog from '../models/WorkoutLog';
 export const getDashboardStats = async (req: any, res: Response): Promise<any> => {
   try {
     const userId = req.user._id;
-
     const today = new Date();
+    
+    const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    
     const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(today.getDate() - 6); 
+    sevenDaysAgo.setDate(today.getDate() - 6);
     sevenDaysAgo.setUTCHours(0, 0, 0, 0);
 
     const summary = await WorkoutLog.aggregate([
       { 
         $match: { 
           user: userId, 
-          status: 'completed',
-          date: { $gte: sevenDaysAgo, $lte: today }
+          status: 'completed', 
+          date: { $gte: startOfCurrentMonth, $lte: today }
         } 
       },
       {
