@@ -55,7 +55,7 @@ export default function DashboardPage() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
               <ActivityChart data={stats?.chartData} />
               
-              <MuscleChart />
+              <MuscleChart data={stats?.muscleData} />
             </div>
           </>
         )}
