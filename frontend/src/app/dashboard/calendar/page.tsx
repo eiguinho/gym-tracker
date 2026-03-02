@@ -2,36 +2,30 @@
 
 import { useState, useEffect } from 'react'
 import { PageHeader } from '@/components/ui/page-header'
-import { BaseCard } from '@/components/ui/base-card'
 import { Spinner } from '@/components/ui/spinner'
 import { workoutService } from '@/services/workout-service'
 import { sleepService } from '@/services/sleep-service'
 import { Workout, WorkoutLog } from '@/types/workout'
 import { SleepLog } from '@/types/sleep'
-import { DraggableWorkout } from '@/components/calendar/draggable-workout'
-import { DroppableDay } from '@/components/calendar/droppable-day'
-import { 
-  format, addMonths, subMonths, startOfMonth, endOfMonth, 
-  startOfWeek, endOfWeek, isSameMonth, isSameDay, eachDayOfInterval 
-} from 'date-fns'
-import { ptBR } from 'date-fns/locale'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
 
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import { CheckInModal } from '@/components/calendar/check-in-modal'
 import { SleepModal } from '@/components/calendar/sleep-modal'
 
+import { WorkoutSidebar } from '@/components/calendar/workout-sidebar'
+import { CalendarGrid } from '@/components/calendar/calendar-grid'
+
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [logs, setLogs] = useState<WorkoutLog[]>([])
-  
   const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([])
   
   const [loading, setLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
+  
   const [selectedLogForCheckIn, setSelectedLogForCheckIn] = useState<WorkoutLog | null>(null)
-
   const [isSleepModalOpen, setIsSleepModalOpen] = useState(false)
   const [selectedDayForSleep, setSelectedDayForSleep] = useState<Date | null>(null)
   const [selectedSleepLog, setSelectedSleepLog] = useState<SleepLog | undefined>(undefined)
@@ -64,44 +58,33 @@ export default function CalendarPage() {
     }
   }
 
-  useEffect(() => {
-    loadData()
-  }, [currentDate])
-
-  const nextMonth = () => setCurrentDate(addMonths(currentDate, 1))
-  const prevMonth = () => setCurrentDate(subMonths(currentDate, 1))
+  useEffect(() => { loadData() }, [currentDate])
 
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
-    
-    if (over && over.data.current && active.data.current) {
-      const targetDate = over.data.current.date
-      const dragType = active.data.current.type
+    if (!over || !over.data.current || !active.data.current) return
 
-      setIsUpdating(true)
-      try {
-        if (dragType === 'sidebar-workout') {
-          const workoutId = active.data.current.workout._id
-          await workoutService.scheduleWorkout(workoutId, targetDate)
-        } 
-        else if (dragType === 'scheduled-log') {
-          const logId = active.data.current.log._id
-          await workoutService.moveCalendarLog(logId, targetDate)
-        }
+    const targetDate = over.data.current.date
+    const dragType = active.data.current.type
 
-        const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
-        setLogs(logsData)
-      } catch (error: any) {
-        const errorMessage = error.response?.data?.message || 'Erro ao processar a ação.'
-        alert(errorMessage)
-      } finally {
-        setIsUpdating(false)
+    setIsUpdating(true)
+    try {
+      if (dragType === 'sidebar-workout') {
+        await workoutService.scheduleWorkout(active.data.current.workout._id, targetDate)
+      } else if (dragType === 'scheduled-log') {
+        await workoutService.moveCalendarLog(active.data.current.log._id, targetDate)
       }
+      const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
+      setLogs(logsData)
+    } catch (error: any) {
+      alert(error.response?.data?.message || 'Erro ao processar a ação.')
+    } finally {
+      setIsUpdating(false)
     }
   }
 
   const handleDeleteLog = async (logId: string) => {
-    if (!confirm('Tem certeza que deseja remover este treino do calendário?')) return;
+    if (!confirm('Tem certeza que deseja remover este treino?')) return;
     setIsUpdating(true)
     try {
       await workoutService.deleteCalendarLog(logId)
@@ -134,74 +117,22 @@ export default function CalendarPage() {
           </div>
 
           <div className="mt-8 flex flex-col gap-6 lg:flex-row">
+            <WorkoutSidebar workouts={workouts} loading={loading} />
             
-            <div className="w-full lg:w-80 flex-shrink-0 space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-white uppercase tracking-wider">
-                Meus Treinos
-              </h3>
-              {loading ? (
-                <Spinner />
-              ) : workouts.length === 0 ? (
-                <p className="text-sm text-gray-500">Nenhum treino criado ainda.</p>
-              ) : (
-                <div className="space-y-3">
-                  {workouts.map((workout) => (
-                    <DraggableWorkout key={workout._id} workout={workout} />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className="flex-1">
-              <BaseCard className="overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
-                
-                <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-4">
-                  <h2 className="text-lg font-bold capitalize text-gray-900 dark:text-white">
-                    {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
-                  </h2>
-                  <div className="flex gap-2">
-                    <button onClick={prevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
-                      <ChevronLeft size={20} />
-                    </button>
-                    <button onClick={nextMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
-                      <ChevronRight size={20} />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
-                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
-                    <div key={day} className="py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                      {day}
-                    </div>
-                  ))}
-                </div>
-
-                <div className="grid grid-cols-7">
-                  {calendarDays.map((day) => {
-                    const isCurrentMonth = isSameMonth(day, monthStart)
-                    const dayLogs = logs.filter(log => isSameDay(new Date(log.date), day))
-                    const daySleepLog = sleepLogs.find(log => isSameDay(new Date(log.date), day))
-
-                    return (
-                      <DroppableDay 
-                        key={day.toISOString()} 
-                        day={day} 
-                        isCurrentMonth={isCurrentMonth} 
-                        dayLogs={dayLogs} 
-                        sleepLog={daySleepLog}
-                        onDeleteLog={handleDeleteLog}
-                        onClickLog={(log) => setSelectedLogForCheckIn(log)}
-                        onClickSleep={handleOpenSleepModal}
-                      />
-                    )
-                  })}
-                </div>
-
-              </BaseCard>
-            </div>
-
+            <CalendarGrid 
+              currentDate={currentDate}
+              monthStart={monthStart}
+              calendarDays={calendarDays}
+              logs={logs}
+              sleepLogs={sleepLogs}
+              onPrevMonth={() => setCurrentDate(subMonths(currentDate, 1))}
+              onNextMonth={() => setCurrentDate(addMonths(currentDate, 1))}
+              onDeleteLog={handleDeleteLog}
+              onClickLog={(log) => setSelectedLogForCheckIn(log)}
+              onClickSleep={handleOpenSleepModal}
+            />
           </div>
+
         </div>
         
         <CheckInModal 
