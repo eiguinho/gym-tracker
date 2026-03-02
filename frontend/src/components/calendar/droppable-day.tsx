@@ -3,7 +3,7 @@
 import { useDroppable } from '@dnd-kit/core'
 import { WorkoutLog } from '@/types/workout'
 import { SleepLog } from '@/types/sleep'
-import { format, isToday } from 'date-fns'
+import { format, isToday, startOfDay, isAfter } from 'date-fns'
 import { Moon } from 'lucide-react'
 import { DraggableScheduledLog } from './draggable-scheduled-log'
 
@@ -19,6 +19,8 @@ interface DroppableDayProps {
 
 export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, onDeleteLog, onClickLog, onClickSleep }: DroppableDayProps) {
   const isTodayDate = isToday(day)
+  
+  const isFutureDay = isAfter(startOfDay(day), startOfDay(new Date()))
   
   const { isOver, setNodeRef } = useDroppable({
     id: `day-${day.toISOString()}`,
@@ -42,19 +44,21 @@ export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, onDeleteL
           {format(day, 'd')}
         </span>
 
-        <button
-          onClick={() => onClickSleep(day, sleepLog)}
-          title={sleepLog ? "Editar sono" : "Registrar sono"}
-          className={`
-            p-1 rounded-md transition-colors 
-            ${sleepLog 
-              ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
-              : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100 dark:text-gray-700 dark:hover:text-gray-400 dark:hover:bg-gray-800 opacity-0 group-hover:opacity-100'
-            }
-          `}
-        >
-          <Moon size={16} className={sleepLog ? "fill-current" : ""} />
-        </button>
+        {!isFutureDay && (
+          <button
+            onClick={() => onClickSleep(day, sleepLog)}
+            title={sleepLog ? "Editar sono" : "Registrar sono"}
+            className={`
+              p-1 rounded-md transition-colors 
+              ${sleepLog 
+                ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
+                : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100 dark:text-gray-700 dark:hover:text-gray-400 dark:hover:bg-gray-800 opacity-0 group-hover:opacity-100'
+              }
+            `}
+          >
+            <Moon size={16} className={sleepLog ? "fill-current" : ""} />
+          </button>
+        )}
       </div>
       
       <div className="mt-2 space-y-1">
