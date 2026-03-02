@@ -6,6 +6,7 @@ import authRoutes from './routes/authRoutes';
 import workoutRoutes from './routes/workoutRoutes';
 import workoutLogRoutes from './routes/workoutLogRoutes';
 import statsRoutes from './routes/statsRoutes';
+import sleepRoutes from './routes/sleepRoutes';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/workouts', workoutRoutes);
 app.use('/api/workout-logs', workoutLogRoutes);
 app.use('/api/stats', statsRoutes);
+app.use('/api/sleep', sleepRoutes);
 
 const PORT = process.env.PORT || 5000;
 
