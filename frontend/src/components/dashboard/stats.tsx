@@ -7,10 +7,15 @@ interface StatsGridProps {
   summary?: {
     activeHours: string;
     completedWorkouts: number;
-  }
+  };
+  sleepData?: {
+    hasLogs: boolean;
+    score: number;
+    averageText: string;
+  };
 }
 
-export function StatsGrid({ summary }: StatsGridProps) {
+export function StatsGrid({ summary, sleepData }: StatsGridProps) {
   const avgSession = summary && summary.completedWorkouts > 0 
     ? (Number(summary.activeHours) / summary.completedWorkouts).toFixed(1)
     : "0";
@@ -40,11 +45,11 @@ export function StatsGrid({ summary }: StatsGridProps) {
         footer={`Média de ${avgSession}h por sessão`}
       />
 
-      <StatCard
-        title="Qualidade do Sono"
-        value="--"
-        icon={<Moon size={24} />}
-        footer={<span className="text-muted-foreground">Aguardando registro</span>}
+      <StatCard 
+        title="Qualidade do Sono" 
+        value={sleepData?.hasLogs ? `${sleepData.score}%` : '--'} 
+        icon={<Moon size={24} className="text-indigo-600 dark:text-indigo-400" />} 
+        footer={sleepData?.hasLogs ? `Média de ${sleepData.averageText} (últimos 7 dias)` : 'Nenhum registro na última semana'} 
       />
     </div>
   )

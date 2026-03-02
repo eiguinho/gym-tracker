@@ -50,7 +50,10 @@ export default function DashboardPage() {
           <div className="flex justify-center py-20"><Spinner /></div>
         ) : (
           <>
-            <StatsGrid summary={stats?.summary} />
+            <StatsGrid 
+              summary={stats?.summary} 
+              sleepData={stats?.sleepData}
+            />
 
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
               <ActivityChart data={stats?.chartData} />

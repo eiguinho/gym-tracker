@@ -1,5 +1,6 @@
 import { Response } from 'express';
 import WorkoutLog from '../models/WorkoutLog';
+import SleepLog from '../models/SleepLog';
 
 export const getDashboardStats = async (req: any, res: Response): Promise<any> => {
   try {
@@ -54,13 +55,38 @@ export const getDashboardStats = async (req: any, res: Response): Promise<any> =
       A: muscleVolume[muscle],
     }));
 
+    const sleepLogs = await SleepLog.find({
+      user: userId,
+      date: { $gte: sevenDaysAgo, $lte: today }
+    });
+
+    let sleepScore = 0;
+    let avgHours = 0;
+    let avgMinutes = 0;
+
+    if (sleepLogs.length > 0) {
+      const totalScore = sleepLogs.reduce((acc, log) => acc + log.qualityScore, 0);
+      const totalMins = sleepLogs.reduce((acc, log) => acc + log.durationMinutes, 0);
+
+      sleepScore = Math.round((totalScore / sleepLogs.length) * 20);
+      
+      const avgTotalMinutes = Math.round(totalMins / sleepLogs.length);
+      avgHours = Math.floor(avgTotalMinutes / 60);
+      avgMinutes = avgTotalMinutes % 60;
+    }
+
     res.json({
       summary: {
         activeHours: (totals.totalMinutes / 60).toFixed(1), 
         completedWorkouts: totals.totalWorkouts,
       },
       chartData: dailyData,
-      muscleData: muscleData
+      muscleData: muscleData,
+      sleepData: {
+        hasLogs: sleepLogs.length > 0,
+        score: sleepScore,
+        averageText: `${avgHours}h ${avgMinutes}m`,
+      }
     });
 
   } catch (error) {
