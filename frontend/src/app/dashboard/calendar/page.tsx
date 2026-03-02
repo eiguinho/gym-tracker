@@ -5,7 +5,9 @@ import { PageHeader } from '@/components/ui/page-header'
 import { BaseCard } from '@/components/ui/base-card'
 import { Spinner } from '@/components/ui/spinner'
 import { workoutService } from '@/services/workout-service'
+import { sleepService } from '@/services/sleep-service'
 import { Workout, WorkoutLog } from '@/types/workout'
+import { SleepLog } from '@/types/sleep'
 import { DraggableWorkout } from '@/components/calendar/draggable-workout'
 import { DroppableDay } from '@/components/calendar/droppable-day'
 import { 
@@ -17,21 +19,25 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import { CheckInModal } from '@/components/calendar/check-in-modal'
+import { SleepModal } from '@/components/calendar/sleep-modal'
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [logs, setLogs] = useState<WorkoutLog[]>([])
+  
+  const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([])
+  
   const [loading, setLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
   const [selectedLogForCheckIn, setSelectedLogForCheckIn] = useState<WorkoutLog | null>(null)
 
+  const [isSleepModalOpen, setIsSleepModalOpen] = useState(false)
+  const [selectedDayForSleep, setSelectedDayForSleep] = useState<Date | null>(null)
+  const [selectedSleepLog, setSelectedSleepLog] = useState<SleepLog | undefined>(undefined)
+
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5, 
-      },
-    })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
   )
 
   const monthStart = startOfMonth(currentDate)
@@ -43,12 +49,14 @@ export default function CalendarPage() {
   const loadData = async () => {
     setLoading(true)
     try {
-      const [workoutsData, logsData] = await Promise.all([
+      const [workoutsData, logsData, sleepData] = await Promise.all([
         workoutService.getAll(),
-        workoutService.getCalendarLogs(monthStart, monthEnd)
+        workoutService.getCalendarLogs(monthStart, monthEnd),
+        sleepService.getLogs(monthStart, monthEnd)
       ])
       setWorkouts(workoutsData)
       setLogs(logsData)
+      setSleepLogs(sleepData)
     } catch (error) {
       console.error("Erro ao carregar dados", error)
     } finally {
@@ -84,7 +92,7 @@ export default function CalendarPage() {
         const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
         setLogs(logsData)
       } catch (error: any) {
-        const errorMessage = error.response?.data?.message || 'Erro ao processar a ação. Tente novamente.'
+        const errorMessage = error.response?.data?.message || 'Erro ao processar a ação.'
         alert(errorMessage)
       } finally {
         setIsUpdating(false)
@@ -94,18 +102,22 @@ export default function CalendarPage() {
 
   const handleDeleteLog = async (logId: string) => {
     if (!confirm('Tem certeza que deseja remover este treino do calendário?')) return;
-    
     setIsUpdating(true)
     try {
       await workoutService.deleteCalendarLog(logId)
       const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
       setLogs(logsData)
     } catch (error) {
-      console.error("Erro ao remover:", error)
       alert('Erro ao remover o treino do calendário.')
     } finally {
       setIsUpdating(false)
     }
+  }
+
+  const handleOpenSleepModal = (day: Date, existingLog?: SleepLog) => {
+    setSelectedDayForSleep(day)
+    setSelectedSleepLog(existingLog)
+    setIsSleepModalOpen(true)
   }
 
   return (
@@ -115,8 +127,8 @@ export default function CalendarPage() {
           
           <div className="flex justify-between items-center">
             <PageHeader 
-              title="Calendário de Treinos" 
-              description="Organize a sua rotina arrastando os seus treinos para os dias do mês."
+              title="Calendário de Treinos e Sono" 
+              description="Organize a sua rotina e acompanhe seu descanso diário."
             />
             {isUpdating && <Spinner />}
           </div>
@@ -169,6 +181,7 @@ export default function CalendarPage() {
                   {calendarDays.map((day) => {
                     const isCurrentMonth = isSameMonth(day, monthStart)
                     const dayLogs = logs.filter(log => isSameDay(new Date(log.date), day))
+                    const daySleepLog = sleepLogs.find(log => isSameDay(new Date(log.date), day))
 
                     return (
                       <DroppableDay 
@@ -176,8 +189,10 @@ export default function CalendarPage() {
                         day={day} 
                         isCurrentMonth={isCurrentMonth} 
                         dayLogs={dayLogs} 
+                        sleepLog={daySleepLog}
                         onDeleteLog={handleDeleteLog}
                         onClickLog={(log) => setSelectedLogForCheckIn(log)}
+                        onClickSleep={handleOpenSleepModal}
                       />
                     )
                   })}
@@ -199,6 +214,19 @@ export default function CalendarPage() {
             setLogs(logsData)
           }}
         />
+
+        <SleepModal 
+          isOpen={isSleepModalOpen}
+          day={selectedDayForSleep}
+          existingLog={selectedSleepLog}
+          onClose={() => setIsSleepModalOpen(false)}
+          onSuccess={async () => {
+            setIsSleepModalOpen(false)
+            const sleepData = await sleepService.getLogs(monthStart, monthEnd)
+            setSleepLogs(sleepData)
+          }}
+        />
+
       </div>
     </DndContext>
   )
