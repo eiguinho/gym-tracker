@@ -8,6 +8,8 @@ export interface IUser extends Document {
   verificationCode?: string;
   verificationCodeExpires?: Date;
   avatarIcon: string;
+  resetPasswordCode?: string;
+  resetPasswordExpires?: Date;
 }
 
 const userSchema = new Schema<IUser>(
@@ -20,6 +22,8 @@ const userSchema = new Schema<IUser>(
     verificationCode: { type: String },
     verificationCodeExpires: { type: Date },
     avatarIcon: { type: String, default: 'User' },
+    resetPasswordCode: { type: String },
+    resetPasswordExpires: { type: Date },
   },
   { timestamps: true }
 );

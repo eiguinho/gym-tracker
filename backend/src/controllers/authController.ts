@@ -108,3 +108,50 @@ export const login = async (req: Request, res: Response): Promise<any> => {
     res.status(500).json({ message: 'Erro ao fazer login', error });
   }
 };
+
+export const forgotPassword = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado com este e-mail.' });
+    }
+
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    user.resetPasswordCode = resetCode;
+    user.resetPasswordExpires = new Date(Date.now() + 15 * 60 * 1000);
+    await user.save();
+
+    await sendVerificationEmail(user.email, resetCode);
+
+    res.status(200).json({ message: 'Código de recuperação enviado para o seu e-mail.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao solicitar recuperação', error });
+  }
+};
+
+export const resetPassword = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { email, code, newPassword } = req.body;
+    const user = await User.findOne({ 
+      email, 
+      resetPasswordCode: code,
+      resetPasswordExpires: { $gt: new Date() } 
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Código inválido ou expirado.' });
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(newPassword, salt);
+    user.resetPasswordCode = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    res.status(200).json({ message: 'Senha alterada com sucesso! Faça login agora.' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao redefinir senha', error });
+  }
+};
