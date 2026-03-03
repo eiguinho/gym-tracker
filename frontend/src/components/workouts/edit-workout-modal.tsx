@@ -17,7 +17,7 @@ interface EditWorkoutModalProps {
 
 export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: EditWorkoutModalProps) {
   const [loading, setLoading] = useState(false)
-  const [fetching, setFetching] = useState(false) // Estado para o loading inicial dos dados
+  const [fetching, setFetching] = useState(false) 
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([])
   
   const [title, setTitle] = useState('')
@@ -105,6 +105,16 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
     }
   }
 
+  const groupedExercises = availableExercises.reduce((acc, exercise) => {
+    const group = exercise.targetMuscles && exercise.targetMuscles.length > 0 
+      ? exercise.targetMuscles[0] 
+      : 'Outros'
+      
+    if (!acc[group]) acc[group] = []
+    acc[group].push(exercise)
+    return acc
+  }, {} as Record<string, Exercise[]>)
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Editar Treino">
       {fetching ? (
@@ -130,9 +140,14 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
             <div className="space-y-3">
               {workoutExercises.map((row, index) => (
                 <ExerciseFormRow 
-                  key={index} index={index} row={row} availableExercises={availableExercises} 
+                  key={index} 
+                  index={index} 
+                  row={row} 
+                  groupedExercises={groupedExercises}
                   allSelectedExercises={workoutExercises.map(ex => ex.exercise)}
-                  onChange={handleExerciseChange} onRemove={removeExerciseRow} canRemove={workoutExercises.length > 1}
+                  onChange={handleExerciseChange} 
+                  onRemove={removeExerciseRow} 
+                  canRemove={workoutExercises.length > 1}
                 />
               ))}
             </div>
