@@ -38,12 +38,12 @@ export function DraggableScheduledLog({ log, onDelete, onClick }: DraggableSched
       {...attributes}
       onClick={() => onClick(log)}
       className={`
-        group relative flex items-center justify-between text-xs p-1.5 rounded border transition-colors
+        group relative flex items-center justify-between text-[9px] sm:text-xs p-1 sm:p-1.5 rounded border transition-colors
         ${isDragging ? draggingClasses : `${colorClasses} cursor-pointer`}
       `}
     >
-      <div className="flex items-center gap-1.5 truncate pr-5">
-        {isCompleted && <CheckCircle2 size={12} className="flex-shrink-0" />}
+      <div className="flex items-center gap-1 w-full truncate pr-4 sm:pr-5">
+        {isCompleted && <CheckCircle2 size={10} className="sm:w-3 sm:h-3 flex-shrink-0" />}
         <span className="truncate font-medium pointer-events-none">
           {log.workout?.title}
         </span>
@@ -51,17 +51,17 @@ export function DraggableScheduledLog({ log, onDelete, onClick }: DraggableSched
       
       <button 
         onPointerDown={(e) => {
-          e.stopPropagation() 
+          e.stopPropagation()
           onDelete(log._id)
         }}
-        className={`absolute right-1 opacity-0 group-hover:opacity-100 p-0.5 rounded transition-all z-10
+        className={`absolute top-0.5 right-0.5 sm:top-auto sm:right-1 opacity-50 sm:opacity-0 sm:group-hover:opacity-100 p-0.5 rounded transition-all z-10
           ${isCompleted 
-            ? 'text-green-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 bg-green-50 dark:bg-transparent' 
-            : 'text-indigo-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 bg-indigo-50 dark:bg-transparent'}
+            ? 'text-green-700 hover:text-red-500 bg-green-100 sm:bg-transparent dark:bg-green-900/50' 
+            : 'text-indigo-700 hover:text-red-500 bg-indigo-100 sm:bg-transparent dark:bg-indigo-900/50'}
         `}
         title="Remover do calendário"
       >
-        <X size={14} />
+        <X className="w-[10px] h-[10px] sm:w-[14px] sm:h-[14px]" />
       </button>
     </div>
   )

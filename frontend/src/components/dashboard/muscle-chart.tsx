@@ -26,7 +26,7 @@ export function MuscleChart({ data }: MuscleChartProps) {
       icon={<Target className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />}
       className="lg:col-span-3 flex flex-col"
     >
-      <div className="h-[250px] w-full flex-1 flex items-center justify-center">
+      <div className="min-h-[300px] w-full flex items-center justify-center">
         {sortedData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <RadarChart cx="50%" cy="50%" outerRadius="70%" data={sortedData}>

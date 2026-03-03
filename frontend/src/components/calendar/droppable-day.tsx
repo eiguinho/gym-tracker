@@ -31,7 +31,7 @@ export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, onDeleteL
     <div 
       ref={setNodeRef}
       className={`
-        border-r border-b border-gray-100 dark:border-gray-800/60 p-2 min-h-[120px] transition-all duration-200 relative group
+        border-r border-b border-gray-100 dark:border-gray-800/60 p-1 sm:p-2 min-h-[60px] sm:min-h-[120px] transition-all duration-200 relative group
         ${!isCurrentMonth ? 'bg-gray-50/50 dark:bg-gray-900/20 text-gray-400 dark:text-gray-600' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-300'}
         ${isOver ? 'bg-indigo-50/80 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-500' : ''} 
       `}
@@ -49,14 +49,14 @@ export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, onDeleteL
             onClick={() => onClickSleep(day, sleepLog)}
             title={sleepLog ? "Editar sono" : "Registrar sono"}
             className={`
-              p-1 rounded-md transition-colors 
+              p-0.5 sm:p-1 rounded-md transition-colors 
               ${sleepLog 
                 ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
-                : 'text-gray-300 hover:text-gray-500 hover:bg-gray-100 dark:text-gray-700 dark:hover:text-gray-400 dark:hover:bg-gray-800 opacity-0 group-hover:opacity-100'
+                : 'text-gray-400 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 hover:text-gray-600 dark:hover:text-gray-300'
               }
             `}
           >
-            <Moon size={16} className={sleepLog ? "fill-current" : ""} />
+            <Moon className={`w-3 h-3 sm:w-4 sm:h-4 ${sleepLog ? "fill-current" : ""}`} />
           </button>
         )}
       </div>

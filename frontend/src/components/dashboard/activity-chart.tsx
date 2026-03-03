@@ -19,21 +19,16 @@ interface ActivityChartProps {
 }
 
 export function ActivityChart({ data }: ActivityChartProps) {
-  // 1. Geramos os últimos 7 dias (de 6 dias atrás até hoje)
   const lastSevenDays = eachDayOfInterval({
     start: subDays(new Date(), 6),
     end: new Date(),
   })
 
-  // 2. Mapeamos cada um desses 7 dias, procurando se existe dado no 'data' do banco
   const chartData = lastSevenDays.map(day => {
-    // Procura no array que veio do backend se algum _id bate com o dia atual do loop
     const dayData = data?.find(d => isSameDay(parseISO(d._id), day))
     
     return {
-      // Ex: "Seg", "Ter"...
       day: format(day, 'EEE', { locale: ptBR }),
-      // Se achou dado, converte minutos para horas. Se não, é 0.
       hours: dayData ? Number((dayData.minutes / 60).toFixed(1)) : 0
     }
   })
@@ -43,24 +38,24 @@ export function ActivityChart({ data }: ActivityChartProps) {
       title="Atividade Semanal"
       description="Volume de treino nos últimos 7 dias"
       icon={<Activity className="h-4 w-4 text-primary" />}
-      className="lg:col-span-4"
+      className="lg:col-span-4 flex flex-col"
     >
-      <div className="h-[250px] w-full">
-        {/* Agora o gráfico nunca estará "vazio", ele mostrará as barras zeradas */}
+      <div className="min-h-[250px] sm:min-h-[300px] w-full mt-4 flex-1">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData}>
+          <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <XAxis 
               dataKey="day" 
               axisLine={false} 
               tickLine={false} 
               className="capitalize"
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
+              tickFormatter={(value) => value.substring(0, 3)}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
               tickFormatter={(value) => `${value}h`}
-              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }}
+              tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }}
             />
             <Tooltip 
               cursor={{ fill: 'hsl(var(--primary) / 0.08)' }}
@@ -70,8 +65,7 @@ export function ActivityChart({ data }: ActivityChartProps) {
               dataKey="hours"
               fill="hsl(var(--primary))"
               radius={[4, 4, 0, 0]}
-              barSize={40}
-              // Animação para ficar elegante ao carregar
+              maxBarSize={40}
               animationDuration={1000}
             />
           </BarChart>

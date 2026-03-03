@@ -26,18 +26,18 @@ export function CalendarGrid({
   onPrevMonth, onNextMonth, onDeleteLog, onClickLog, onClickSleep
 }: CalendarGridProps) {
   return (
-    <div className="flex-1">
+    <div className="flex-1 w-full">
       <BaseCard className="overflow-hidden bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800">
         
-        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-4">
-          <h2 className="text-lg font-bold capitalize text-gray-900 dark:text-white">
+        <div className="flex items-center justify-between border-b border-gray-200 dark:border-gray-800 p-3 sm:p-4">
+          <h2 className="text-base sm:text-lg font-bold capitalize text-gray-900 dark:text-white">
             {format(currentDate, 'MMMM yyyy', { locale: ptBR })}
           </h2>
-          <div className="flex gap-2">
-            <button onClick={onPrevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
+          <div className="flex gap-1 sm:gap-2">
+            <button onClick={onPrevMonth} className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
               <ChevronLeft size={20} />
             </button>
-            <button onClick={onNextMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
+            <button onClick={onNextMonth} className="p-1.5 sm:p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg text-gray-600 dark:text-gray-300">
               <ChevronRight size={20} />
             </button>
           </div>
@@ -45,8 +45,9 @@ export function CalendarGrid({
 
         <div className="grid grid-cols-7 border-b border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
           {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day) => (
-            <div key={day} className="py-2 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
-              {day}
+            <div key={day} className="py-2 text-center text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider overflow-hidden">
+              <span className="sm:hidden">{day.charAt(0)}</span>
+              <span className="hidden sm:inline">{day}</span>
             </div>
           ))}
         </div>
