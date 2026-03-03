@@ -155,3 +155,37 @@ export const resetPassword = async (req: Request, res: Response): Promise<any> =
     res.status(500).json({ message: 'Erro ao redefinir senha', error });
   }
 };
+
+export const updateProfile = async (req: any, res: Response): Promise<any> => {
+  try {
+    const { name, avatarIcon } = req.body;
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { name, avatarIcon },
+      { returnDocument: 'after' } 
+    ).select('-passwordHash');
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    res.json({
+      message: 'Perfil atualizado com sucesso!',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        avatarIcon: user.avatarIcon
+      }
+    });
+  } catch (error) {
+    console.error('Erro no updateProfile:', error);
+    res.status(500).json({ message: 'Erro ao atualizar perfil', error });
+  }
+};
