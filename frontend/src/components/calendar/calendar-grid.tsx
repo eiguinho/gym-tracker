@@ -14,16 +14,18 @@ interface CalendarGridProps {
   calendarDays: Date[]
   logs: WorkoutLog[]
   sleepLogs: SleepLog[]
+  selectedDate: Date
   onPrevMonth: () => void
   onNextMonth: () => void
   onDeleteLog: (logId: string) => void
   onClickLog: (log: WorkoutLog) => void
   onClickSleep: (day: Date, existingLog?: SleepLog) => void
+  onDayClick: (day: Date) => void
 }
 
 export function CalendarGrid({
-  currentDate, monthStart, calendarDays, logs, sleepLogs,
-  onPrevMonth, onNextMonth, onDeleteLog, onClickLog, onClickSleep
+  currentDate, monthStart, calendarDays, logs, sleepLogs, selectedDate,
+  onPrevMonth, onNextMonth, onDeleteLog, onClickLog, onClickSleep, onDayClick
 }: CalendarGridProps) {
   return (
     <div className="flex-1 w-full">
@@ -65,6 +67,8 @@ export function CalendarGrid({
                 isCurrentMonth={isCurrentMonth} 
                 dayLogs={dayLogs} 
                 sleepLog={daySleepLog}
+                isSelected={isSameDay(day, selectedDate)}
+                onDayClick={onDayClick}
                 onDeleteLog={onDeleteLog}
                 onClickLog={onClickLog}
                 onClickSleep={onClickSleep}

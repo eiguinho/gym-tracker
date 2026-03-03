@@ -12,14 +12,15 @@ interface DroppableDayProps {
   isCurrentMonth: boolean
   dayLogs: WorkoutLog[]
   sleepLog?: SleepLog
+  isSelected: boolean
   onDeleteLog: (logId: string) => void
   onClickLog: (log: WorkoutLog) => void
   onClickSleep: (day: Date, existingLog?: SleepLog) => void
+  onDayClick: (day: Date) => void
 }
 
-export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, onDeleteLog, onClickLog, onClickSleep }: DroppableDayProps) {
+export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, isSelected, onDeleteLog, onClickLog, onClickSleep, onDayClick }: DroppableDayProps) {
   const isTodayDate = isToday(day)
-  
   const isFutureDay = isAfter(startOfDay(day), startOfDay(new Date()))
   
   const { isOver, setNodeRef } = useDroppable({
@@ -30,15 +31,18 @@ export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, onDeleteL
   return (
     <div 
       ref={setNodeRef}
+      onClick={() => onDayClick(day)}
       className={`
-        border-r border-b border-gray-100 dark:border-gray-800/60 p-1 sm:p-2 min-h-[60px] sm:min-h-[120px] transition-all duration-200 relative group
+        border-r border-b border-gray-100 dark:border-gray-800/60 p-1 sm:p-2 min-h-[60px] sm:min-h-[120px] transition-all duration-200 relative group cursor-pointer
         ${!isCurrentMonth ? 'bg-gray-50/50 dark:bg-gray-900/20 text-gray-400 dark:text-gray-600' : 'bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-300'}
         ${isOver ? 'bg-indigo-50/80 dark:bg-indigo-900/40 ring-2 ring-inset ring-indigo-500' : ''} 
+        /* NOVO: Se estiver selecionado, ganha uma borda azul grossa e um fundo azul clarinho */
+        ${isSelected ? 'ring-2 ring-inset ring-indigo-500 bg-indigo-50/30 dark:bg-indigo-900/10' : 'hover:bg-gray-50 dark:hover:bg-gray-800/40'}
       `}
     >
-      <div className="flex justify-between items-start">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-0.5 sm:gap-1">
         <span className={`
-          text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full
+          text-[10px] sm:text-sm font-medium w-4 h-4 sm:w-7 sm:h-7 flex items-center justify-center rounded-full
           ${isTodayDate ? 'bg-indigo-600 text-white' : ''}
         `}>
           {format(day, 'd')}
@@ -46,7 +50,10 @@ export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, onDeleteL
 
         {!isFutureDay && (
           <button
-            onClick={() => onClickSleep(day, sleepLog)}
+            onClick={(e) => {
+              e.stopPropagation()
+              onClickSleep(day, sleepLog)
+            }}
             title={sleepLog ? "Editar sono" : "Registrar sono"}
             className={`
               p-0.5 sm:p-1 rounded-md transition-colors 

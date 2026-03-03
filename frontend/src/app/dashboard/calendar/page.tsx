@@ -7,17 +7,20 @@ import { workoutService } from '@/services/workout-service'
 import { sleepService } from '@/services/sleep-service'
 import { Workout, WorkoutLog } from '@/types/workout'
 import { SleepLog } from '@/types/sleep'
-import { addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
+import { addMonths, subMonths, startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, isSameDay } from 'date-fns'
 
 import { DndContext, DragEndEvent, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
 import { CheckInModal } from '@/components/calendar/check-in-modal'
 import { SleepModal } from '@/components/calendar/sleep-modal'
-
 import { WorkoutSidebar } from '@/components/calendar/workout-sidebar'
 import { CalendarGrid } from '@/components/calendar/calendar-grid'
+import { DaySummary } from '@/components/calendar/day-summary' 
 
 export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date())
+  
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+
   const [workouts, setWorkouts] = useState<Workout[]>([])
   const [logs, setLogs] = useState<WorkoutLog[]>([])
   const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([])
@@ -76,6 +79,9 @@ export default function CalendarPage() {
       }
       const logsData = await workoutService.getCalendarLogs(monthStart, monthEnd)
       setLogs(logsData)
+      
+      setSelectedDate(targetDate)
+      
     } catch (error: any) {
       alert(error.response?.data?.message || 'Erro ao processar a ação.')
     } finally {
@@ -103,6 +109,9 @@ export default function CalendarPage() {
     setIsSleepModalOpen(true)
   }
 
+  const selectedDayLogs = logs.filter(log => isSameDay(new Date(log.date), selectedDate))
+  const selectedDaySleepLog = sleepLogs.find(log => isSameDay(new Date(log.date), selectedDate))
+
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-950">
@@ -119,18 +128,29 @@ export default function CalendarPage() {
           <div className="mt-8 flex flex-col gap-6 lg:flex-row">
             <WorkoutSidebar workouts={workouts} loading={loading} />
             
-            <CalendarGrid 
-              currentDate={currentDate}
-              monthStart={monthStart}
-              calendarDays={calendarDays}
-              logs={logs}
-              sleepLogs={sleepLogs}
-              onPrevMonth={() => setCurrentDate(subMonths(currentDate, 1))}
-              onNextMonth={() => setCurrentDate(addMonths(currentDate, 1))}
-              onDeleteLog={handleDeleteLog}
-              onClickLog={(log) => setSelectedLogForCheckIn(log)}
-              onClickSleep={handleOpenSleepModal}
-            />
+            <div className="flex-1 flex flex-col gap-6">
+              <CalendarGrid 
+                currentDate={currentDate}
+                monthStart={monthStart}
+                calendarDays={calendarDays}
+                logs={logs}
+                sleepLogs={sleepLogs}
+                selectedDate={selectedDate} // NOVO
+                onDayClick={(day) => setSelectedDate(day)} // NOVO
+                onPrevMonth={() => setCurrentDate(subMonths(currentDate, 1))}
+                onNextMonth={() => setCurrentDate(addMonths(currentDate, 1))}
+                onDeleteLog={handleDeleteLog}
+                onClickLog={(log) => setSelectedLogForCheckIn(log)}
+                onClickSleep={handleOpenSleepModal}
+              />
+
+              <DaySummary 
+                selectedDate={selectedDate}
+                dayLogs={selectedDayLogs}
+                daySleepLog={selectedDaySleepLog}
+                allWorkouts={workouts}
+              />
+            </div>
           </div>
 
         </div>
