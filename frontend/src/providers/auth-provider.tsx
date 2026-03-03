@@ -4,8 +4,7 @@ import { createContext, ReactNode, useState, useEffect, useContext } from 'react
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
 import { User, AuthContextData } from '@/types/auth'
-
-export const AuthContext = createContext({} as AuthContextData)
+export const AuthContext = createContext({} as any) 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -26,21 +25,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function signIn({ email, password }: any) {
     try {
-      const response = await api.post('/auth/login', {
-        email,
-        password,
-      })
-
-      const { token, name, _id } = response.data
+      const response = await api.post('/auth/login', { email, password })
+      const { token, name, _id, avatarIcon } = response.data
 
       localStorage.setItem('@gymtracker:token', token)
-      const userData = { id: _id, name, email } 
+      const userData = { id: _id, name, email, avatarIcon } 
       localStorage.setItem('@gymtracker:user', JSON.stringify(userData))
 
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-
       setUser(userData)
-
       router.push('/dashboard') 
 
     } catch (error) {
@@ -49,15 +42,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  async function verifyAndSignIn({ email, code }: { email: string, code: string }) {
+    try {
+      const response = await api.post('/auth/verify', { email, code })
+      const { token, name, _id, avatarIcon } = response.data
+
+      localStorage.setItem('@gymtracker:token', token)
+      const userData = { id: _id, name, email, avatarIcon } 
+      localStorage.setItem('@gymtracker:user', JSON.stringify(userData))
+
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+      setUser(userData)
+      router.push('/dashboard') 
+
+    } catch (error) {
+      console.error('Erro ao verificar email', error)
+      throw error
+    }
+  }
+
   function signOut() {
     localStorage.removeItem('@gymtracker:token')
     localStorage.removeItem('@gymtracker:user')
+    delete api.defaults.headers.common['Authorization']
     setUser(null)
-    router.push('/')
+    router.push('/login')
   }
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user, isAuthenticated: !!user, signIn, verifyAndSignIn, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   )
