@@ -13,7 +13,6 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Componente de Login Isolado */}
         <LoginForm />
         
       </div>

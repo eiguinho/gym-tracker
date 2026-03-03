@@ -74,6 +74,12 @@ export function LoginForm() {
             Cadastre-se gratuitamente
           </Link>
         </p>
+        <p className="text-gray-500 dark:text-gray-400">
+          Esqueceu sua senha?{' '}
+          <Link href="/forgot-password" className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400">
+            Recuperar senha
+          </Link>
+        </p>
       </div>
     </form>
   )
