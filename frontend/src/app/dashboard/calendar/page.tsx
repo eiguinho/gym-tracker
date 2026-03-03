@@ -6,7 +6,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { WorkoutLog } from '@/types/workout'
 import { SleepLog } from '@/types/sleep'
 import { addMonths, subMonths, isSameDay } from 'date-fns'
-import { DndContext, useSensor, useSensors, PointerSensor } from '@dnd-kit/core'
+import { DndContext, useSensor, useSensors, PointerSensor, DragOverlay } from '@dnd-kit/core'
 
 import { CheckInModal } from '@/components/calendar/check-in-modal'
 import { SleepModal } from '@/components/calendar/sleep-modal'
@@ -17,11 +17,11 @@ import { ScheduleWorkoutModal } from '@/components/calendar/schedule-workout-mod
 import { useCalendarData } from '@/hooks/use-calendar-data'
 
 export default function CalendarPage() {
-  // Chamamos o Cérebro com apenas 1 linha
   const { 
     currentDate, setCurrentDate, selectedDate, setSelectedDate, 
     workouts, logs, sleepLogs, loading, isUpdating, monthStart, calendarDays, 
-    handleDragEnd, handleDeleteLog, handleDeleteSleep, handleScheduleWorkout, 
+    handleDragStart, handleDragEnd, activeId,
+    handleDeleteLog, handleDeleteSleep, handleScheduleWorkout, 
     fetchLogs, fetchSleep 
   } = useCalendarData()
 
@@ -36,8 +36,11 @@ export default function CalendarPage() {
   const selectedDayLogs = logs.filter(log => isSameDay(new Date(log.date), selectedDate))
   const selectedDaySleepLog = sleepLogs.find(log => isSameDay(new Date(log.date), selectedDate))
 
+  const activeWorkout = workouts.find(w => w._id === activeId) || 
+                       logs.find(l => l._id === activeId)?.workout;
+
   return (
-    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+    <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
       <div className="min-h-screen bg-gray-50 p-8 dark:bg-gray-950">
         <div className="mx-auto max-w-7xl">
           
@@ -95,6 +98,16 @@ export default function CalendarPage() {
             setIsScheduleModalOpen(false);
           }}
         />
+
+        <DragOverlay zIndex={1000}>
+          {activeId && (
+            <div className="w-64 cursor-grabbing scale-105 transition-transform">
+              <div className="rounded-lg bg-indigo-600 p-3 text-white text-sm font-medium shadow-2xl border border-indigo-400">
+                {typeof activeWorkout === 'object' ? activeWorkout.title : 'Arraste para um dia de treino!'}
+              </div>
+            </div>
+          )}
+        </DragOverlay>
 
       </div>
     </DndContext>

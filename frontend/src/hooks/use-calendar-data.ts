@@ -1,10 +1,12 @@
+'use client'
+
 import { useState, useEffect } from 'react'
 import { workoutService } from '@/services/workout-service'
 import { sleepService } from '@/services/sleep-service'
 import { Workout, WorkoutLog } from '@/types/workout'
 import { SleepLog } from '@/types/sleep'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
-import { DragEndEvent } from '@dnd-kit/core'
+import { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
 import { toast } from 'sonner'
 
 export function useCalendarData() {
@@ -17,6 +19,7 @@ export function useCalendarData() {
   
   const [loading, setLoading] = useState(true)
   const [isUpdating, setIsUpdating] = useState(false)
+  const [activeId, setActiveId] = useState<string | null>(null)
 
   const monthStart = startOfMonth(currentDate)
   const monthEnd = endOfMonth(monthStart)
@@ -48,8 +51,14 @@ export function useCalendarData() {
 
   useEffect(() => { loadData() }, [currentDate])
 
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string)
+  }
+
   const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
+    setActiveId(null)
+
     if (!over || !over.data.current || !active.data.current) return
 
     const targetDate = over.data.current.date
@@ -116,7 +125,8 @@ export function useCalendarData() {
   return {
     currentDate, setCurrentDate, selectedDate, setSelectedDate,
     workouts, logs, sleepLogs, loading, isUpdating, monthStart, calendarDays,
-    handleDragEnd, handleDeleteLog, handleDeleteSleep, handleScheduleWorkout,
+    handleDragStart, handleDragEnd, activeId,
+    handleDeleteLog, handleDeleteSleep, handleScheduleWorkout,
     fetchLogs, fetchSleep
   }
 }
