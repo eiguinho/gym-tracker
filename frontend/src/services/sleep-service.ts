@@ -10,5 +10,9 @@ export const sleepService = {
   getLogs: async (startDate: Date, endDate: Date): Promise<SleepLog[]> => {
     const response = await api.get(`/sleep?startDate=${startDate.toISOString()}&endDate=${endDate.toISOString()}`)
     return response.data
+  },
+
+  delete: async (id: string): Promise<void> => {
+    await api.delete(`/sleep/${id}`)
   }
 }

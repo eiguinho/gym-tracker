@@ -53,3 +53,20 @@ export const getSleepLogs = async (req: any, res: Response): Promise<any> => {
     res.status(500).json({ message: 'Erro ao buscar registros de sono', error });
   }
 };
+
+export const deleteSleepLog = async (req: any, res: Response): Promise<any> => {
+  try {
+    const { id } = req.params;
+    const userId = req.user._id;
+
+    const deletedLog = await SleepLog.findOneAndDelete({ _id: id, user: userId });
+
+    if (!deletedLog) {
+      return res.status(404).json({ message: 'Registro de sono não encontrado' });
+    }
+
+    res.status(200).json({ message: 'Registro de sono excluído com sucesso' });
+  } catch (error) {
+    res.status(500).json({ message: 'Erro ao excluir registro de sono', error });
+  }
+};
