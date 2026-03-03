@@ -7,6 +7,7 @@ import { Exercise } from '@/types/workout'
 import { Plus } from 'lucide-react'
 import { ExerciseFormRow } from './exercise-form-row'
 import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 
 interface EditWorkoutModalProps {
   isOpen: boolean
@@ -50,7 +51,7 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
         setWorkoutExercises(formattedExercises)
       } catch (error) {
         console.error('Erro ao carregar dados do treino', error)
-        alert('Erro ao carregar os detalhes do treino.')
+        toast.error('Erro ao carregar dados do treino.')
         onClose()
       } finally {
         setFetching(false)
@@ -83,11 +84,11 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
       const validExercises = workoutExercises.filter(item => item.exercise !== '')
       
       if (new Set(validExercises.map(item => item.exercise)).size !== validExercises.length) {
-        return alert('Remova os exercícios duplicados antes de salvar.')
+        return toast.warning('Remova os exercícios duplicados antes de salvar.')
       }
       
       if (validExercises.length === 0) {
-        return alert('Adicione pelo menos um exercício ao treino.')
+        return toast.warning('Adicione pelo menos um exercício ao treino.')
       }
 
       const formattedForAPI = validExercises.map(item => ({
@@ -97,9 +98,10 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
       }))
 
       await workoutService.update(workoutId, { title, exercises: formattedForAPI })
+      toast.success('Treino atualizado com sucesso!')
       onSuccess()
     } catch (error) {
-      alert('Erro ao atualizar treino. Tente novamente.')
+      toast.error('Erro ao atualizar treino. Tente novamente.')
     } finally {
       setLoading(false)
     }

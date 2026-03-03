@@ -6,6 +6,7 @@ import { authService } from '@/services/auth-service'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { User, Dumbbell, Flame, Zap, HeartPulse, Trophy } from 'lucide-react'
+import { toast } from 'sonner'
 
 const AVATARS = [
   { id: 'User', icon: User },
@@ -35,20 +36,17 @@ export function RegisterForm() {
 
     try {
       await authService.register(formData)
+      toast.success('Conta criada! Verifique o código no seu e-mail.')
       router.push(`/verify?email=${encodeURIComponent(formData.email)}`)
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Erro ao criar conta. Tente novamente.')
+      const msg = err.response?.data?.message || 'Erro ao criar conta. Tente novamente.'
+      toast.error(msg)
       setLoading(false)
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 mt-6">
-      {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400">
-          {error}
-        </div>
-      )}
 
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center">

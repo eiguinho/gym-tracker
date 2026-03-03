@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { SleepLog } from '@/types/sleep'
 import { sleepService } from '@/services/sleep-service'
 import { Moon, Save } from 'lucide-react'
+import { toast } from 'sonner'
 import { format } from 'date-fns'
 
 interface SleepModalProps {
@@ -61,8 +62,9 @@ export function SleepModal({ isOpen, day, existingLog, onClose, onSuccess }: Sle
         notes
       })
       onSuccess()
+      toast.success('Dados de sono registrados!')
     } catch (error) {
-      alert('Erro ao salvar registro de sono.')
+      toast.error('Erro ao salvar registro de sono.')
     } finally {
       setLoading(false)
     }

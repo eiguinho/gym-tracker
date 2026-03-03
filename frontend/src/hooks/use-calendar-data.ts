@@ -5,6 +5,7 @@ import { Workout, WorkoutLog } from '@/types/workout'
 import { SleepLog } from '@/types/sleep'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
 import { DragEndEvent } from '@dnd-kit/core'
+import { toast } from 'sonner'
 
 export function useCalendarData() {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -63,8 +64,9 @@ export function useCalendarData() {
       }
       await fetchLogs()
       setSelectedDate(targetDate)
+      toast.success('Treino reprogramado!')
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Erro ao processar.')
+      toast.error(error.response?.data?.message || 'Erro ao processar requisição')
     } finally {
       setIsUpdating(false)
     }
@@ -76,8 +78,9 @@ export function useCalendarData() {
     try {
       await workoutService.deleteCalendarLog(logId)
       await fetchLogs()
+      toast.success('Treino removido do calendário.')
     } catch (error) {
-      alert('Erro ao remover o treino.')
+      toast.error('Erro ao remover o treino.')
     } finally {
       setIsUpdating(false)
     }
@@ -89,8 +92,9 @@ export function useCalendarData() {
     try {
       await sleepService.delete(sleepLogId) 
       await fetchSleep()
+      toast.success('Registro de sono removido.')
     } catch (error) {
-      alert('Erro ao excluir registro de sono.')
+      toast.error('Erro ao excluir registro de sono.')
     } finally {
       setIsUpdating(false)
     }
@@ -101,8 +105,9 @@ export function useCalendarData() {
     try {
       await workoutService.scheduleWorkout(workoutId, selectedDate)
       await fetchLogs()
+      toast.success('Treino agendado com sucesso!')
     } catch (error: any) {
-      alert(error.response?.data?.message || 'Erro ao agendar treino.')
+      toast.error('Erro ao agendar treino.')
     } finally {
       setIsUpdating(false)
     }

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/providers/auth-provider'
 import { Spinner } from '@/components/ui/spinner'
+import { toast } from 'sonner'
 
 export function VerifyForm() {
   const router = useRouter()
@@ -29,9 +30,10 @@ export function VerifyForm() {
 
     try {
       await verifyAndSignIn({ email, code })
-      
+      toast.success('E-mail verificado! Acesso liberado.')
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Código inválido. Verifique e tente novamente.')
+      const msg = err.response?.data?.message || 'Código inválido. Verifique e tente novamente.'
+      toast.error(msg)
       setLoading(false)
     }
   }
@@ -44,12 +46,6 @@ export function VerifyForm() {
         Código enviado para: <br />
         <span className="font-semibold">{email}</span>
       </div>
-
-      {error && (
-        <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600 dark:bg-red-900/30 dark:text-red-400 text-center">
-          {error}
-        </div>
-      )}
 
       <div>
         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 text-center mb-2">

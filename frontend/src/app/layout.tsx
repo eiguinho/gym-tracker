@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans } from 'next/font/google'
 import "./globals.css";
 import { ThemeProvider } from '@/providers/theme-provider'
 import { AuthProvider } from '../providers/auth-provider'
+import { Toaster } from 'sonner'
 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -30,6 +31,7 @@ export default function RootLayout({
             {children}
           </AuthProvider>
         </ThemeProvider>
+        <Toaster position="top-right" richColors closeButton />
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import { Modal } from '@/components/ui/modal'
 import { Input } from '@/components/ui/input'
 import { WorkoutLog } from '@/types/workout'
 import { workoutService } from '@/services/workout-service'
+import { toast } from 'sonner'
 import { CheckCircle, Clock, RotateCcw, CalendarClock } from 'lucide-react'
 import { isAfter, startOfDay, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
@@ -34,14 +35,15 @@ export function CheckInModal({ isOpen, log, onClose, onSuccess }: CheckInModalPr
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!duration || Number(duration) <= 0) return alert('Insira uma duração válida.')
+    if (!duration || Number(duration) <= 0) return toast.error('A duração deve ser maior que zero.')
 
     setLoading(true)
     try {
       await workoutService.updateLogStatus(log._id, 'completed', Number(duration))
       onSuccess()
+      toast.success('Check-in realizado! Treino concluído. 🔥')
     } catch (error) {
-      alert('Erro ao salvar check-in.')
+      toast.error('Erro ao salvar check-in.')
     } finally {
       setLoading(false)
     }
@@ -52,8 +54,9 @@ export function CheckInModal({ isOpen, log, onClose, onSuccess }: CheckInModalPr
     try {
       await workoutService.updateLogStatus(log._id, 'planned', 0)
       onSuccess()
+      toast.success('Treino desmarcado!')
     } catch (error) {
-      alert('Erro ao desmarcar treino.')
+      toast.error('Erro ao desmarcar treino.')
     } finally {
       setLoading(false)
     }

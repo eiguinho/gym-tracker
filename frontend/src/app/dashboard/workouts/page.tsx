@@ -9,6 +9,7 @@ import { WorkoutCard } from '@/components/workouts/workout-card'
 import { PageHeader } from '@/components/ui/page-header'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Spinner } from '@/components/ui/spinner'
+import { toast } from 'sonner'
 
 export default function WorkoutsPage() {
   const [workouts, setWorkouts] = useState<Workout[]>([])
@@ -37,8 +38,9 @@ export default function WorkoutsPage() {
     try {
       await workoutService.delete(id)
       setWorkouts((prev) => prev.filter((workout) => workout._id !== id))
+      toast.success('Treino excluído permanentemente!')
     } catch (error) {
-      alert('Erro ao excluir treino')
+      toast.error('Erro ao excluir treino')
       console.error(error)
     }
   }

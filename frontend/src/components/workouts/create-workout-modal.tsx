@@ -7,6 +7,7 @@ import { Exercise } from '@/types/workout'
 import { Plus } from 'lucide-react'
 import { ExerciseFormRow } from './exercise-form-row'
 import { Input } from '@/components/ui/input'
+import { toast } from 'sonner'
 
 interface CreateWorkoutModalProps {
   isOpen: boolean
@@ -62,11 +63,11 @@ export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkout
       const validExercises = workoutExercises.filter(item => item.exercise !== '')
       
       if (new Set(validExercises.map(item => item.exercise)).size !== validExercises.length) {
-        return alert('Remova os exercícios duplicados antes de salvar.')
+        toast.warning('Remova os exercícios duplicados ou adicione novos.')
       }
       
       if (validExercises.length === 0) {
-        return alert('Adicione pelo menos um exercício ao treino.')
+        return toast.warning('Adicione pelo menos um exercício ao treino.')
       }
 
       const formatted = validExercises.map(item => ({
@@ -74,9 +75,10 @@ export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkout
       }))
 
       await workoutService.create({ title, exercises: formatted })
+      toast.success('Nova rotina de treino criada! 💪')
       onSuccess()
     } catch (error) {
-      alert('Erro ao criar treino. Tente novamente.')
+      toast.error('Erro ao criar treino. Tente novamente.')
     } finally {
       setLoading(false)
     }

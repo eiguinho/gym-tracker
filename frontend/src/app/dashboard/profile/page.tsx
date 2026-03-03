@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { BaseCard } from '@/components/ui/base-card'
+import { toast } from 'sonner'
 import api from '@/lib/api'
 import { 
   User, Dumbbell, Flame, Zap, HeartPulse, Trophy, 
@@ -41,10 +42,9 @@ export default function ProfilePage() {
       setUser(updatedUser)
       localStorage.setItem('@gymtracker:user', JSON.stringify(updatedUser))
       
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+      toast.success('Perfil atualizado!')
     } catch (error) {
-      alert('Erro ao atualizar perfil')
+      toast.error('Erro ao atualizar perfil')
     } finally {
       setLoading(false)
     }
