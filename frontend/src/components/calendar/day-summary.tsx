@@ -4,7 +4,7 @@ import { Workout, WorkoutLog } from '@/types/workout'
 import { SleepLog } from '@/types/sleep'
 import { format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
-import { Dumbbell, Moon, Info, Activity } from 'lucide-react'
+import { Dumbbell, Moon, Info, Activity, X, Plus } from 'lucide-react'
 import { ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Tooltip } from 'recharts'
 import { BaseCard } from '@/components/ui/base-card'
 
@@ -13,17 +13,18 @@ interface DaySummaryProps {
   dayLogs: WorkoutLog[]
   daySleepLog?: SleepLog
   allWorkouts: Workout[] 
+  onAddWorkoutClick: () => void
+  onDeleteWorkout: (id: string) => void
+  onDeleteSleep: (id: string) => void
 }
 
-export function DaySummary({ selectedDate, dayLogs, daySleepLog, allWorkouts }: DaySummaryProps) {
+export function DaySummary({ selectedDate, dayLogs, daySleepLog, allWorkouts, onAddWorkoutClick, onDeleteWorkout, onDeleteSleep }: DaySummaryProps) {
   
   const calculateMuscleFocus = () => {
     const muscleVolume: Record<string, number> = {}
-    
     dayLogs.forEach(log => {
       const workoutId = typeof log.workout === 'object' ? (log.workout as any)._id : log.workout;
       const fullWorkout = allWorkouts.find(w => w._id === workoutId) as any
-
       if (fullWorkout && fullWorkout.exercises) {
         fullWorkout.exercises.forEach((exItem: any) => {
           const exercise = exItem.exercise
@@ -36,27 +37,18 @@ export function DaySummary({ selectedDate, dayLogs, daySleepLog, allWorkouts }: 
       }
     })
 
-    let finalData = Object.keys(muscleVolume).map(muscle => ({
-      subject: muscle,
-      A: muscleVolume[muscle],
-    }))
-
+    let finalData = Object.keys(muscleVolume).map(muscle => ({ subject: muscle, A: muscleVolume[muscle] }))
     if (finalData.length > 0) {
-      if (finalData.length === 1) {
-        finalData.push({ subject: ' ', A: 0 }, { subject: '  ', A: 0 })
-      } else if (finalData.length === 2) {
-        finalData.push({ subject: ' ', A: 0 })
-      }
+      if (finalData.length === 1) finalData.push({ subject: ' ', A: 0 }, { subject: '  ', A: 0 })
+      else if (finalData.length === 2) finalData.push({ subject: ' ', A: 0 })
     }
-
     return finalData
   }
 
   const muscleData = calculateMuscleFocus()
 
   return (
-    <BaseCard className="mt-6 bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-800 p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
-      
+    <BaseCard className="mt-6 p-6 shadow-sm animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="mb-6 border-b border-gray-100 dark:border-gray-800 pb-4">
         <h3 className="text-xl font-bold text-gray-900 dark:text-white capitalize">
           Resumo do dia {format(selectedDate, "dd 'de' MMMM", { locale: ptBR })}
@@ -74,18 +66,31 @@ export function DaySummary({ selectedDate, dayLogs, daySleepLog, allWorkouts }: 
           {dayLogs.length > 0 ? (
             <div className="space-y-3">
               {dayLogs.map(log => (
-                <div key={log._id} className="p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
-                  <p className="font-medium text-gray-900 dark:text-white">{log.workout?.title}</p>
+                <div key={log._id} className="group relative p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 pr-10">
+                  <p className="font-medium text-gray-900 dark:text-white truncate">{log.workout?.title}</p>
                   <p className="text-sm text-gray-500 mt-1">
                     Status: {log.status === 'completed' ? '✅ Concluído' : '⏳ Planejado'}
                   </p>
+                  
+                  <button
+                    onClick={() => onDeleteWorkout(log._id)}
+                    className="absolute top-1/2 -translate-y-1/2 right-2 p-1.5 text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all"
+                    title="Excluir treino"
+                  >
+                    <X size={16} />
+                  </button>
                 </div>
               ))}
             </div>
           ) : (
-            <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-gray-500 text-sm">
-              <Info size={18} className="text-gray-400 mt-0.5" />
+            <div className="flex flex-col items-center justify-center gap-3 p-6 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-gray-500 text-sm border border-gray-100 dark:border-gray-700 text-center">
               <p>Você ainda não preparou um treino para este dia.</p>
+              <button 
+                onClick={onAddWorkoutClick}
+                className="mt-2 flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+              >
+                <Plus size={16} /> Adicionar Treino
+              </button>
             </div>
           )}
         </div>
@@ -97,7 +102,7 @@ export function DaySummary({ selectedDate, dayLogs, daySleepLog, allWorkouts }: 
           </div>
 
           {daySleepLog ? (
-            <div className="p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700">
+            <div className="group relative p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-100 dark:border-gray-700 pr-10">
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm text-gray-500 dark:text-gray-400">Duração</span>
                 <span className="font-semibold text-gray-900 dark:text-white">
@@ -115,9 +120,17 @@ export function DaySummary({ selectedDate, dayLogs, daySleepLog, allWorkouts }: 
                   "{daySleepLog.notes}"
                 </p>
               )}
+              
+              <button
+                onClick={() => onDeleteSleep(daySleepLog._id!)}
+                className="absolute top-2 right-2 p-1.5 text-red-500 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/40 rounded-md opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-all"
+                title="Excluir registro de sono"
+              >
+                <X size={16} />
+              </button>
             </div>
           ) : (
-            <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-gray-500 text-sm">
+            <div className="flex items-start gap-3 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg text-gray-500 text-sm border border-gray-100 dark:border-gray-700">
               <Info size={18} className="text-gray-400 mt-0.5" />
               <p>Nenhum registro de sono para esta noite.</p>
             </div>

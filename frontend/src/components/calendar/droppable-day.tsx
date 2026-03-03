@@ -52,16 +52,18 @@ export function DroppableDay({ day, isCurrentMonth, dayLogs, sleepLog, isSelecte
           <button
             onClick={(e) => {
               e.stopPropagation()
-              onClickSleep(day, sleepLog)
+              if (!sleepLog) {
+                onClickSleep(day, sleepLog)
+              }
             }}
-            title={sleepLog ? "Editar sono" : "Registrar sono"}
             className={`
               p-0.5 sm:p-1 rounded-md transition-colors 
               ${sleepLog 
-                ? 'text-yellow-500 hover:bg-yellow-50 dark:hover:bg-yellow-900/20'
-                : 'text-gray-400 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 hover:text-gray-600 dark:hover:text-gray-300'
+                ? 'text-yellow-500 cursor-default' 
+                : 'text-gray-400 opacity-40 sm:opacity-0 sm:group-hover:opacity-100 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer'
               }
             `}
+            title={sleepLog ? "Sono já registrado" : "Registrar sono"}
           >
             <Moon className={`w-3 h-3 sm:w-4 sm:h-4 ${sleepLog ? "fill-current" : ""}`} />
           </button>
