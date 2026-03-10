@@ -1,0 +1,49 @@
+name: QA E2E Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  e2e-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código do repositório
+        uses: actions/checkout@v4
+
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Instalar dependências (Backend, Frontend e QA)
+        run: |
+          cd backend && npm install
+          cd ../frontend && npm install
+          cd ../qa-tests && npm install
+
+      - name: Iniciar Backend (em background)
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          cd backend
+          npm run dev & 
+          sleep 10 # Dá 10 segundos pro banco conectar
+
+      - name: Iniciar Frontend (em background)
+        run: |
+          cd frontend
+          npm run dev &
+          sleep 15 # Dá 15 segundos pro Next.js compilar a tela inicial
+
+      - name: Rodar Testes Automatizados (Selenium + Jest)
+        env:
+          TEST_EMAIL: ${{ secrets.TEST_EMAIL }}
+          TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
+        run: |
+          cd qa-tests
+          npm test
