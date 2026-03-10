@@ -39,7 +39,7 @@ describe('Fluxo de Cadastro - GymTracker', () => {
     await submitButton.click();
 
     let validationMsg = await passwordInput.getAttribute('validationMessage');
-    expect(validationMsg).toMatch(/6 caracteres/i);
+    expect(validationMsg).toMatch(/6 (caracteres|characters)/i);
   });
 
   it('2. Deve exibir Toast de erro se o e-mail já estiver em uso', async () => {
