@@ -13,6 +13,7 @@ interface SleepModalProps {
   isOpen: boolean
   day: Date | null
   existingLog: SleepLog | undefined
+  isNightAlreadyRegistered?: boolean
   onClose: () => void
   onSuccess: () => void
 }
@@ -25,7 +26,14 @@ const QUALITY_OPTIONS = [
   { value: 5, label: 'Revigorado', emoji: '🤩' },
 ]
 
-export function SleepModal({ isOpen, day, existingLog, onClose, onSuccess }: SleepModalProps) {
+export function SleepModal({ 
+  isOpen, 
+  day, 
+  existingLog, 
+  isNightAlreadyRegistered, 
+  onClose, 
+  onSuccess 
+}: SleepModalProps) {
   const [bedTime, setBedTime] = useState('23:00')
   const [wakeTime, setWakeTime] = useState('07:00')
   const [qualityScore, setQualityScore] = useState(3)
@@ -62,7 +70,7 @@ export function SleepModal({ isOpen, day, existingLog, onClose, onSuccess }: Sle
         notes
       })
       onSuccess()
-      toast.success('Dados de sono registrados!')
+      toast.success(existingLog ? 'Registro atualizado!' : 'Dados de sono registrados!')
     } catch (error) {
       toast.error('Erro ao salvar registro de sono.')
     } finally {
@@ -71,19 +79,29 @@ export function SleepModal({ isOpen, day, existingLog, onClose, onSuccess }: Sle
   }
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Registro de Sono">
+    <Modal isOpen={isOpen} onClose={onClose} title={existingLog ? "Editar Sono" : "Registro de Sono"}>
       <div className="mb-6 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-lg border border-indigo-100 dark:border-indigo-800">
-        <h3 className="font-semibold text-indigo-900 dark:text-indigo-100 flex items-center gap-2">
-          <Moon className="text-indigo-500 fill-current" size={20} />
-          {format(day, "dd/MM/yyyy")}
-        </h3>
-        <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-1">
-          Como foi a sua noite de sono?
-        </p>
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="font-semibold text-indigo-900 dark:text-indigo-100 flex items-center gap-2">
+              <Moon className="text-indigo-500 fill-current" size={20} />
+              {format(day, "dd/MM/yyyy")}
+            </h3>
+            <p className="text-sm text-indigo-700 dark:text-indigo-300 mt-1">
+              {isNightAlreadyRegistered 
+                ? "Você já registrou o sono desta noite. Deseja alterar os dados?" 
+                : "Como foi sua noite de sono? (Referente à noite anterior)"}
+            </p>
+          </div>
+          {isNightAlreadyRegistered && (
+            <span className="bg-yellow-100 text-yellow-800 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border border-yellow-200 animate-pulse">
+              Já registrado
+            </span>
+          )}
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -142,7 +160,7 @@ export function SleepModal({ isOpen, day, existingLog, onClose, onSuccess }: Sle
           </button>
           <button type="submit" disabled={loading} className="flex items-center gap-2 rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-700 transition-colors">
             <Save size={16} />
-            Salvar Registro
+            {existingLog ? "Atualizar Registro" : "Salvar Registro"}
           </button>
         </div>
       </form>

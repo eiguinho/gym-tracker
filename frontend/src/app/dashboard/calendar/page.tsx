@@ -30,6 +30,7 @@ export default function CalendarPage() {
   const [selectedDayForSleep, setSelectedDayForSleep] = useState<Date | null>(null)
   const [selectedSleepLog, setSelectedSleepLog] = useState<SleepLog | undefined>(undefined)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
+  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false)
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
@@ -37,7 +38,7 @@ export default function CalendarPage() {
   const selectedDaySleepLog = sleepLogs.find(log => isSameDay(new Date(log.date), selectedDate))
 
   const activeWorkout = workouts.find(w => w._id === activeId) || 
-                       logs.find(l => l._id === activeId)?.workout;
+                        logs.find(l => l._id === activeId)?.workout;
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -56,8 +57,12 @@ export default function CalendarPage() {
             
             <div className="flex-1 flex flex-col gap-6">
               <CalendarGrid 
-                currentDate={currentDate} monthStart={monthStart} calendarDays={calendarDays}
-                logs={logs} sleepLogs={sleepLogs} selectedDate={selectedDate} 
+                currentDate={currentDate} 
+                monthStart={monthStart} 
+                calendarDays={calendarDays}
+                logs={logs} 
+                sleepLogs={sleepLogs} 
+                selectedDate={selectedDate} 
                 onDayClick={setSelectedDate} 
                 onPrevMonth={() => setCurrentDate(subMonths(currentDate, 1))}
                 onNextMonth={() => setCurrentDate(addMonths(currentDate, 1))}
@@ -66,6 +71,13 @@ export default function CalendarPage() {
                 onClickSleep={(day, existingLog) => {
                   setSelectedDayForSleep(day)
                   setSelectedSleepLog(existingLog)
+                  const yesterday = new Date(day);
+                  yesterday.setDate(yesterday.getDate() - 1);
+
+                  const hasMoonYesterday = sleepLogs.some(log => 
+                    isSameDay(new Date(log.date), yesterday)
+                  );
+                  setIsAlreadyRegistered(hasMoonYesterday)
                   setIsSleepModalOpen(true)
                 }}
               />
@@ -86,7 +98,10 @@ export default function CalendarPage() {
         />
 
         <SleepModal 
-          isOpen={isSleepModalOpen} day={selectedDayForSleep} existingLog={selectedSleepLog}
+          isOpen={isSleepModalOpen} 
+          day={selectedDayForSleep} 
+          existingLog={selectedSleepLog}
+          isNightAlreadyRegistered={isAlreadyRegistered}
           onClose={() => setIsSleepModalOpen(false)}
           onSuccess={() => { setIsSleepModalOpen(false); fetchSleep(); }}
         />
