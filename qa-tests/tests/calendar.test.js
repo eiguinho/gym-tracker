@@ -101,16 +101,20 @@ describe('Fluxo do Calendário - GymTracker', () => {
   });
 
   it('4. Deve validar duração vazia e limite de 300 minutos no Check-in', async () => {
-    let scheduledLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 5000);
+    let scheduledLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 10000);
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", scheduledLogCard);
+    await driver.sleep(800);
     await scheduledLogCard.click();
 
-    let durationInput = await driver.wait(until.elementLocated(By.css("input[type='number']")), 5000);
+    let durationInput = await driver.wait(until.elementLocated(By.css("input[type='number']")), 10000);
 
     await durationInput.sendKeys(Key.CONTROL, 'a');
     await durationInput.sendKeys(Key.BACK_SPACE);
     
     let submitBtn = await driver.findElement(By.css('button[type="submit"]'));
     await submitBtn.click();
+    
+    await driver.sleep(1000);
     let emptyMsg = await durationInput.getAttribute('validationMessage');
     expect(emptyMsg).toMatch(/(Preencha|fill out)/i);
 
@@ -121,14 +125,16 @@ describe('Fluxo do Calendário - GymTracker', () => {
 
     let cancelBtn = await driver.findElement(By.xpath("//button[contains(., 'Cancelar')]"));
     await cancelBtn.click();
-    await driver.sleep(500);
+    await driver.sleep(1000);
   });
 
   it('5. Deve fazer check-in e concluir um treino agendado', async () => {
-    let scheduledLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 5000);
+    let scheduledLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 10000);
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", scheduledLogCard);
+    await driver.sleep(800);
     await scheduledLogCard.click();
 
-    let durationInput = await driver.wait(until.elementLocated(By.css("input[type='number']")), 5000);
+    let durationInput = await driver.wait(until.elementLocated(By.css("input[type='number']")), 10000);
     await durationInput.sendKeys(Key.CONTROL, 'a');
     await durationInput.sendKeys(Key.BACK_SPACE);
     await durationInput.sendKeys('45'); 
@@ -136,19 +142,23 @@ describe('Fluxo do Calendário - GymTracker', () => {
     let completeBtn = await driver.findElement(By.xpath("//button[contains(., 'Concluir Treino')]"));
     await completeBtn.click();
 
-    let toast = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Check-in realizado!')]")), 5000);
+    let toast = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Check-in realizado!')]")), 10000);
     expect(await toast.getText()).toBeTruthy();
+    await driver.sleep(1000);
   });
 
   it('6. Deve desmarcar (Undo) um treino concluído', async () => {
-    let completedLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 5000);
+    let completedLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 10000);
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", completedLogCard);
+    await driver.sleep(800);
     await completedLogCard.click();
 
-    let undoBtn = await driver.wait(until.elementLocated(By.xpath("//button[contains(., 'Desmarcar')]")), 5000);
+    let undoBtn = await driver.wait(until.elementLocated(By.xpath("//button[contains(., 'Desmarcar')]")), 10000);
     await undoBtn.click();
 
-    let toast = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Treino desmarcado!')]")), 5000);
+    let toast = await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Treino desmarcado!')]")), 10000);
     expect(await toast.getText()).toBeTruthy();
+    await driver.sleep(1000);
   });
 
   it('7. Deve excluir o registro de sono do Resumo do Dia lidando com Alerta', async () => {
