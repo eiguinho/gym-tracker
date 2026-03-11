@@ -88,7 +88,31 @@ describe('Fluxo do Calendário - GymTracker', () => {
     expect(luaAmarela).toBeTruthy();
   });
 
-  it('3. Deve agendar um treino para o dia atual via modal', async () => {
+  it('3. Deve permitir editar um registro de sono existente clicando na Lua', async () => {
+    const dayNumber = new Date().getDate().toString();
+
+    let dayCell = await driver.wait(until.elementLocated(By.xpath(
+      `//div[not(contains(@class, 'opacity'))]//span[text()='${dayNumber}']/ancestor::div[1]`
+    )), 5000);
+
+    await dayCell.click();
+    await driver.sleep(1000);
+
+    let moonBtn = await dayCell.findElement(By.css("button[title='Registrar sono']"));
+    await driver.executeScript("arguments[0].click();", moonBtn);
+
+    await driver.wait(until.elementLocated(By.xpath("//span[contains(text(), 'Já registrado')]")), 8000);
+
+    let inputs = await driver.wait(until.elementsLocated(By.css("input[type='time']")), 5000);
+    await inputs[0].sendKeys('23', '30');
+
+    let updateBtn = await driver.findElement(By.xpath("//button[contains(., 'Salvar Registro')]"));
+    await updateBtn.click();
+
+    await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Dados de sono registrados!')]")), 10000);
+  });
+
+  it('4. Deve agendar um treino para o dia atual via modal', async () => {
     let addWorkoutBtn = await driver.wait(until.elementLocated(By.xpath("//button[contains(., 'Adicionar Treino')]")), 5000);
     await driver.executeScript("arguments[0].click();", addWorkoutBtn);
     
@@ -100,7 +124,7 @@ describe('Fluxo do Calendário - GymTracker', () => {
     expect(scheduledLog.length).toBeGreaterThan(0);
   });
 
-  it('4. Deve validar duração vazia e limite de 300 minutos no Check-in', async () => {
+  it('5. Deve validar duração vazia e limite de 300 minutos no Check-in', async () => {
     let scheduledLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 10000);
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", scheduledLogCard);
     await driver.sleep(800);
@@ -128,7 +152,7 @@ describe('Fluxo do Calendário - GymTracker', () => {
     await driver.sleep(1000);
   });
 
-  it('5. Deve fazer check-in e concluir um treino agendado', async () => {
+  it('6. Deve fazer check-in e concluir um treino agendado', async () => {
     let scheduledLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 10000);
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", scheduledLogCard);
     await driver.sleep(800);
@@ -147,7 +171,7 @@ describe('Fluxo do Calendário - GymTracker', () => {
     await driver.sleep(1000);
   });
 
-  it('6. Deve desmarcar (Undo) um treino concluído', async () => {
+  it('7. Deve desmarcar (Undo) um treino concluído', async () => {
     let completedLogCard = await driver.wait(until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[@title='Remover do calendário']]")), 10000);
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", completedLogCard);
     await driver.sleep(800);
@@ -161,7 +185,7 @@ describe('Fluxo do Calendário - GymTracker', () => {
     await driver.sleep(1000);
   });
 
-  it('7. Deve excluir o registro de sono do Resumo do Dia lidando com Alerta', async () => {
+  it('8. Deve excluir o registro de sono do Resumo do Dia lidando com Alerta', async () => {
     let cellWithSleep = await driver.wait(
       until.elementLocated(By.xpath("//div[contains(@class, 'cursor-pointer') and .//button[contains(@class, 'text-yellow-500')]]")),
       5000
@@ -183,7 +207,7 @@ describe('Fluxo do Calendário - GymTracker', () => {
     expect(emptySleepText.length).toBeGreaterThan(0);
   });
 
-  it('8. Deve excluir o treino agendado do Resumo do Dia lidando com Alerta', async () => {
+  it('9. Deve excluir o treino agendado do Resumo do Dia lidando com Alerta', async () => {
     let todayCell = await driver.wait(
       until.elementLocated(By.xpath("//div[.//span[contains(@class, 'bg-indigo-600') and contains(@class, 'text-white')]]")),
       5000
@@ -205,7 +229,7 @@ describe('Fluxo do Calendário - GymTracker', () => {
     expect(emptyStateText.length).toBeGreaterThan(0);
   });
 
-  it('9. Deve excluir o treino diretamente pelo card do calendário lidando com PointerEvent', async () => {
+  it('10. Deve excluir o treino diretamente pelo card do calendário lidando com PointerEvent', async () => {
     await driver.executeScript("window.scrollTo(0, 0);");
     let addWorkoutBtn = await driver.wait(until.elementLocated(By.xpath("//button[contains(., 'Adicionar Treino')]")), 5000);
     await driver.executeScript("arguments[0].click();", addWorkoutBtn);
