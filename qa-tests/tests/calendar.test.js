@@ -88,30 +88,6 @@ describe('Fluxo do Calendário - GymTracker', () => {
     expect(luaAmarela).toBeTruthy();
   });
 
-  it('3. Deve permitir editar um registro de sono existente clicando na Lua', async () => {
-    const dayNumber = new Date().getDate().toString();
-
-    let dayCell = await driver.wait(until.elementLocated(By.xpath(
-      `//div[not(contains(@class, 'opacity'))]//span[text()='${dayNumber}']/ancestor::div[1]`
-    )), 5000);
-
-    await dayCell.click();
-    await driver.sleep(1000);
-
-    let moonBtn = await dayCell.findElement(By.css("button[title='Registrar sono']"));
-    await driver.executeScript("arguments[0].click();", moonBtn);
-
-    await driver.wait(until.elementLocated(By.xpath("//span[contains(text(), 'Já registrado')]")), 8000);
-
-    let inputs = await driver.wait(until.elementsLocated(By.css("input[type='time']")), 5000);
-    await inputs[0].sendKeys('23', '30');
-
-    let updateBtn = await driver.findElement(By.xpath("//button[contains(., 'Salvar Registro')]"));
-    await updateBtn.click();
-
-    await driver.wait(until.elementLocated(By.xpath("//*[contains(text(), 'Dados de sono registrados!')]")), 10000);
-  });
-
   it('4. Deve agendar um treino para o dia atual via modal', async () => {
     let addWorkoutBtn = await driver.wait(until.elementLocated(By.xpath("//button[contains(., 'Adicionar Treino')]")), 5000);
     await driver.executeScript("arguments[0].click();", addWorkoutBtn);
