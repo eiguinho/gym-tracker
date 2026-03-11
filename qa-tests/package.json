@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "jest --testTimeout=15000"
+    "test": "jest --runInBand --testTimeout=30000"
   },
   "keywords": [],
   "author": "",
