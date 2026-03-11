@@ -118,6 +118,12 @@ describe('Fluxo de Meus Treinos - GymTracker', () => {
     await nameInput.sendKeys('Treino de QA Automatizado');
 
     let selectElement = await driver.findElement(By.css('select'));
+
+    await driver.wait(async () => {
+      let options = await selectElement.findElements(By.css('option'));
+      return options.length > 1; 
+    }, 10000, 'A API de exercícios demorou demais para carregar no select');
+
     let options = await selectElement.findElements(By.css('option'));
     await options[1].click(); 
 
@@ -126,7 +132,7 @@ describe('Fluxo de Meus Treinos - GymTracker', () => {
 
     let toast = await driver.wait(
       until.elementLocated(By.xpath("//*[contains(text(), 'Nova rotina de treino criada!')]")), 
-      5000
+      10000
     );
     let toastText = await toast.getAttribute('textContent');
     expect(toastText).toBeTruthy();
