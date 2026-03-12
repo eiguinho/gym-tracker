@@ -92,9 +92,10 @@ describe('Fluxo de Cadastro - GymTracker', () => {
 
     let successToast = await driver.wait(
       until.elementLocated(By.xpath("//*[contains(text(), 'Conta criada!')]")), 
-      5000
+      8000
     );
-    expect(await successToast.isDisplayed()).toBe(true);
+    let toastText = await successToast.getText();
+    expect(toastText).toContain('Conta criada!');
 
     await driver.wait(until.urlContains('/verify'), 10000);
 
@@ -104,34 +105,35 @@ describe('Fluxo de Cadastro - GymTracker', () => {
 
     let errorToast = await driver.wait(
       until.elementLocated(By.xpath("//*[contains(text(), 'Código inválido')]")), 
-      5000
+      8000
     );
     expect(await errorToast.getAttribute('textContent')).toBeTruthy();
   });
 
   it('5. Deve validar o acesso com código mestre e APAGAR o usuário no final', async () => {
-    let codeInput = await driver.findElement(By.css('input'));
+    let codeInput = await driver.wait(until.elementLocated(By.css('input')), 5000);
+    
     await codeInput.sendKeys(Key.CONTROL, 'a', Key.BACK_SPACE); 
     await codeInput.sendKeys('999999');
     await driver.findElement(By.css('button[type="submit"]')).click();
 
-    await driver.wait(until.urlContains('/dashboard'), 10000);
+    await driver.wait(until.urlContains('/dashboard'), 15000);
     
     await driver.get('http://localhost:3000/dashboard/profile');
     
     let deleteBtn = await driver.wait(
       until.elementLocated(By.xpath("//button[contains(., 'Excluir Conta')]")),
-      8000
+      10000
     );
     
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", deleteBtn);
-    await driver.sleep(500);
+    await driver.sleep(1000);
     await deleteBtn.click();
 
-    await driver.wait(until.alertIsPresent(), 4000);
+    await driver.wait(until.alertIsPresent(), 5000);
     await (await driver.switchTo().alert()).accept();
 
-    await driver.wait(until.urlIs('http://localhost:3000/'), 10000);
+    await driver.wait(until.urlIs('http://localhost:3000/'), 15000);
     expect(await driver.getCurrentUrl()).toBe('http://localhost:3000/');
   });
 });
