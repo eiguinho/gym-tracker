@@ -7,10 +7,10 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { BaseCard } from '@/components/ui/base-card'
 import { toast } from 'sonner'
-import api from '@/lib/api'
+import { authService } from '@/services/auth-service'
 import { 
   User, Dumbbell, Flame, Zap, HeartPulse, Trophy, 
-  Save, CheckCircle2 
+  Save, CheckCircle2, Trash2, AlertTriangle 
 } from 'lucide-react'
 
 const AVATARS = [
@@ -23,9 +23,9 @@ const AVATARS = [
 ]
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth()
+  const { user, setUser, signOut } = useAuth()
   const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
   
   const [name, setName] = useState(user?.name || '')
   const [avatarIcon, setAvatarIcon] = useState(user?.avatarIcon || 'User')
@@ -33,15 +33,10 @@ export default function ProfilePage() {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setSuccess(false)
-
     try {
-      const response = await api.put('/auth/profile', { name, avatarIcon })
-      
-      const updatedUser = response.data.user
-      setUser(updatedUser)
-      localStorage.setItem('@gymtracker:user', JSON.stringify(updatedUser))
-      
+      const data = await authService.updateProfile({ name, avatarIcon })
+      setUser(data.user)
+      localStorage.setItem('@gymtracker:user', JSON.stringify(data.user))
       toast.success('Perfil atualizado!')
     } catch (error) {
       toast.error('Erro ao atualizar perfil')
@@ -50,8 +45,27 @@ export default function ProfilePage() {
     }
   }
 
+  const handleDeleteAccount = async () => {
+    const confirmed = window.confirm(
+      "VOCÊ TEM CERTEZA? Isso excluirá permanentemente sua conta, treinos e registros de sono. Esta ação não pode ser desfeita."
+    )
+
+    if (!confirmed) return
+
+    setDeleteLoading(true)
+    try {
+      await authService.deleteAccount()
+      toast.success('Sua conta foi excluída.')
+      signOut()
+    } catch (error) {
+      toast.error('Erro ao excluir conta.')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
   return (
-    <div className="min-h-screen bg-background p-8">
+    <div className="min-h-screen bg-background p-8 font-sans">
       <div className="mx-auto max-w-2xl">
         <PageHeader 
           title="Meu Perfil" 
@@ -60,10 +74,9 @@ export default function ProfilePage() {
 
         <BaseCard className="mt-8 p-6">
           <form onSubmit={handleSave} className="space-y-6">
-            
             <div className="space-y-4">
               <label className="text-sm font-medium text-muted-foreground">Avatar de Perfil</label>
-              <div className="flex flex-wrap justify-center gap-4 py-4">
+              <div className="flex flex-wrap justify-center gap-4 py-2">
                 {AVATARS.map(({ id, icon: Icon }) => (
                   <button
                     key={id}
@@ -94,18 +107,14 @@ export default function ProfilePage() {
                 required 
               />
               <div className="space-y-2">
-                <label className="text-sm font-medium leading-none text-muted-foreground">E-mail (Não editável)</label>
+                <label className="text-sm font-medium leading-none text-muted-foreground">E-mail</label>
                 <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground opacity-70 cursor-not-allowed">
                   {user?.email}
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center justify-between border-t border-border pt-6">
-              <p className={`text-sm transition-opacity ${success ? 'opacity-100 text-green-600' : 'opacity-0'}`}>
-                ✅ Perfil atualizado com sucesso!
-              </p>
-              
+            <div className="flex items-center justify-end border-t border-border pt-6">
               <button
                 type="submit"
                 disabled={loading}
@@ -115,6 +124,27 @@ export default function ProfilePage() {
               </button>
             </div>
           </form>
+        </BaseCard>
+
+        <BaseCard className="mt-8 border-red-200 p-6 dark:border-red-900/30 bg-red-50/50 dark:bg-red-900/10">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-red-600 dark:text-red-500 flex items-center gap-2">
+                <AlertTriangle size={20} /> Zona de Perigo
+              </h3>
+              <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+                Ao excluir sua conta, você perderá todo o progresso e dados salvos até agora.
+              </p>
+            </div>
+            
+            <button
+              onClick={handleDeleteAccount}
+              disabled={deleteLoading}
+              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 shrink-0"
+            >
+              {deleteLoading ? <Spinner /> : <><Trash2 size={18} /> Excluir Conta</>}
+            </button>
+          </div>
         </BaseCard>
       </div>
     </div>

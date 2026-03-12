@@ -5,12 +5,10 @@ export const authService = {
     const response = await api.post('/auth/login', credentials)
     return response.data
   },
-
   register: async (data: { name: string; email: string; password: string; avatarIcon: string }) => {
     const response = await api.post('/auth/register', data)
     return response.data
   },
-
   verifyEmail: async (data: { email: string; code: string }) => {
     const response = await api.post('/auth/verify', data)
     return response.data
@@ -22,5 +20,13 @@ export const authService = {
   resetPassword: async (data: any) => {
     const response = await api.post('/auth/reset-password', data)
     return response.data
+  },
+  deleteAccount: async () => {
+    const response = await api.delete('/auth/profile');
+    return response.data;
+  },
+  updateProfile: async (data: { name: string; avatarIcon: string }) => {
+    const response = await api.put('/auth/profile', data);
+    return response.data;
   }
 }
