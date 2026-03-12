@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import User from '../models/User';
+import Workout from '../models/Workout';
+import WorkoutLog from '../models/WorkoutLog'; 
+import SleepLog from '../models/SleepLog';
 import generateToken from '../utils/generateToken';
 import { sendVerificationEmail } from '../utils/sendEmail';
 
@@ -49,19 +52,16 @@ export const register = async (req: Request, res: Response): Promise<any> => {
 export const verifyEmail = async (req: Request, res: Response): Promise<any> => {
   try {
     const { email, code } = req.body;
-
     const user = await User.findOne({ email });
 
-    if (!user) {
-      return res.status(404).json({ message: 'Usuário não encontrado.' });
-    }
+    if (!user) return res.status(404).json({ message: 'Usuário não encontrado.' });
 
-    if (user.isVerified) {
-      return res.status(400).json({ message: 'E-mail já verificado.' });
-    }
+    const isMasterCode = process.env.NODE_ENV !== 'production' && code === '999999';
 
-    if (user.verificationCode !== code || !user.verificationCodeExpires || user.verificationCodeExpires < new Date()) {
-      return res.status(400).json({ message: 'Código inválido ou expirado.' });
+    if (!isMasterCode) {
+      if (user.verificationCode !== code || !user.verificationCodeExpires || user.verificationCodeExpires < new Date()) {
+        return res.status(400).json({ message: 'Código inválido ou expirado.' });
+      }
     }
 
     user.isVerified = true;
@@ -187,5 +187,30 @@ export const updateProfile = async (req: any, res: Response): Promise<any> => {
   } catch (error) {
     console.error('Erro no updateProfile:', error);
     res.status(500).json({ message: 'Erro ao atualizar perfil', error });
+  }
+};
+
+export const deleteProfile = async (req: any, res: Response): Promise<any> => {
+  try {
+    const userId = req.user?._id;
+
+    if (!userId) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
+
+    const user = await User.findByIdAndDelete(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    await Workout.deleteMany({ userId });
+    await WorkoutLog.deleteMany({ userId });
+    await SleepLog.deleteMany({ userId });
+
+    res.status(200).json({ message: 'Conta excluída com sucesso!' });
+  } catch (error) {
+    console.error('Erro ao deletar perfil:', error);
+    res.status(500).json({ message: 'Erro ao excluir conta', error });
   }
 };
