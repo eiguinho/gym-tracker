@@ -109,7 +109,7 @@ export function RegisterForm() {
         Já tem uma conta?{' '}
         <button
           type="button"
-          onClick={() => router.push('/login')}
+          onClick={() => router.push('/')}
           className="font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400"
         >
           Faça login

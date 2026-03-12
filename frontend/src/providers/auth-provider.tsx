@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('@gymtracker:user')
     delete api.defaults.headers.common['Authorization']
     setUser(null)
-    router.push('/login')
+    router.push('/')
   }
 
   return (

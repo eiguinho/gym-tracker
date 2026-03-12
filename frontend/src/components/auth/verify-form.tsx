@@ -19,7 +19,7 @@ export function VerifyForm() {
 
   useEffect(() => {
     if (!email) {
-      router.push('/login')
+      router.push('/')
     }
   }, [email, router])
 

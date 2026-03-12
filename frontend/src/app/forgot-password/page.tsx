@@ -46,7 +46,7 @@ export default function ForgotPasswordPage() {
         
         <div className="text-center">
           <button 
-            onClick={() => step === 2 ? setStep(1) : router.push('/login')}
+            onClick={() => step === 2 ? setStep(1) : router.push('/')}
             className="inline-flex items-center text-sm text-gray-500 hover:text-indigo-600 transition-colors mb-4 group"
           >
             <ChevronLeft size={16} className="mr-1 group-hover:-translate-x-1 transition-transform" />
