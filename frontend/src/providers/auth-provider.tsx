@@ -3,7 +3,9 @@
 import { createContext, ReactNode, useState, useEffect, useContext } from 'react'
 import { useRouter } from 'next/navigation'
 import api from '@/lib/api'
-import { User, AuthContextData } from '@/types/auth'
+import { authService } from '@/services/auth-service'
+import { User } from '@/types/auth'
+
 export const AuthContext = createContext({} as any) 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -23,17 +25,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false)
   }, [])
 
+  const setSession = (token: string, userData: User) => {
+    localStorage.setItem('@gymtracker:token', token)
+    localStorage.setItem('@gymtracker:user', JSON.stringify(userData))
+    api.defaults.headers.common['Authorization'] = `Bearer ${token}`
+    setUser(userData)
+  }
+
   async function signIn({ email, password }: any) {
     try {
-      const response = await api.post('/auth/login', { email, password })
-      const { token, name, _id, avatarIcon } = response.data
+      const data = await authService.login({ email, password })
+      
+      const userData = { 
+        id: data._id, 
+        name: data.name, 
+        email: data.email, 
+        avatarIcon: data.avatarIcon 
+      }
 
-      localStorage.setItem('@gymtracker:token', token)
-      const userData = { id: _id, name, email, avatarIcon } 
-      localStorage.setItem('@gymtracker:user', JSON.stringify(userData))
-
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      setUser(userData)
+      setSession(data.token, userData)
       router.push('/dashboard') 
 
     } catch (error) {
@@ -44,15 +54,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function verifyAndSignIn({ email, code }: { email: string, code: string }) {
     try {
-      const response = await api.post('/auth/verify', { email, code })
-      const { token, name, _id, avatarIcon } = response.data
+      const data = await authService.verifyEmail({ email, code })
+      
+      const userData = { 
+        id: data._id, 
+        name: data.name, 
+        email: data.email, 
+        avatarIcon: data.avatarIcon 
+      }
 
-      localStorage.setItem('@gymtracker:token', token)
-      const userData = { id: _id, name, email, avatarIcon } 
-      localStorage.setItem('@gymtracker:user', JSON.stringify(userData))
-
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      setUser(userData)
+      setSession(data.token, userData)
       router.push('/dashboard') 
 
     } catch (error) {
@@ -70,7 +81,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, setUser, isAuthenticated: !!user, signIn, verifyAndSignIn, signOut, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      setUser, 
+      isAuthenticated: !!user, 
+      signIn, 
+      verifyAndSignIn, 
+      signOut, 
+      loading 
+    }}>
       {children}
     </AuthContext.Provider>
   )
