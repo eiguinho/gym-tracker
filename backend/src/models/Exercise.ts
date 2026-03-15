@@ -6,7 +6,7 @@ export interface IExercise extends Document {
   equipment: string; // Ex: 'Barra', 'Halter', 'Máquina'
   difficulty: 'Iniciante' | 'Intermediário' | 'Avançado'; // Útil pra IA futura
   videoUrl?: string; // Futuro: Link pro vídeo ensinando
-  gifUrl: { type: String },
+  gifUrl?: string;
 }
 
 const ExerciseSchema: Schema = new Schema(
@@ -16,6 +16,7 @@ const ExerciseSchema: Schema = new Schema(
     equipment: { type: String, required: true },
     difficulty: { type: String, default: 'Intermediário' },
     videoUrl: { type: String },
+    gifUrl: { type: String },
   },
   { timestamps: true },
 );
