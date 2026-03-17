@@ -14,7 +14,7 @@ import {
 const navItems = [
   { name: 'Home', href: '/dashboard', icon: Home },
   { name: 'Meus Treinos', href: '/dashboard/workouts', icon: Dumbbell },
-  { name: 'Exercícios', href: '/dashboard/exercicios', icon: List },
+  { name: 'Exercícios', href: '/dashboard/exercises', icon: List },
 ]
 
 const ICONS = {
