@@ -63,7 +63,8 @@ export function WorkoutCard({ workout, onDelete, onEdit }: WorkoutCardProps) {
           <div key={index} className="flex items-center text-sm text-gray-600 dark:text-gray-300">
             <span className="mr-2 h-1.5 w-1.5 rounded-full bg-indigo-500 flex-shrink-0"></span>
             <span className="truncate">
-              {typeof item.exercise === 'object' ? item.exercise.name : 'Exercício'} 
+              {/* CORREÇÃO AQUI: Optional chaining e fallback direto */}
+              {item.exercise?.name || 'Exercício removido do sistema'} 
               <span className="ml-1 text-gray-400 text-xs">({item.sets}x {item.reps})</span>
             </span>
           </div>
