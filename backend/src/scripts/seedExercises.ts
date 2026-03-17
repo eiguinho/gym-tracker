@@ -4,8 +4,6 @@ import Exercise from '../models/Exercise';
 
 dotenv.config();
 
-// Adicione os caminhos dos GIFs apenas nos que você já tiver baixado.
-// Nos que não tiver, deixe vazio ('') e o seu Controller cuidará de filtrar!
 const exercises = [
   // --- PEITO ---
   { name: 'Supino Reto com Barra', targetMuscles: ['Peito', 'Tríceps', 'Ombros'], equipment: 'Barra', difficulty: 'Intermediário', gifUrl: '/exercises/supino-reto.gif' },
@@ -20,8 +18,8 @@ const exercises = [
   { name: 'Crossover (Polia Alta)', targetMuscles: ['Peito'], equipment: 'Cabo', difficulty: 'Intermediário', gifUrl: '/exercises/cross-alta.gif' },
   { name: 'Crossover (Polia Média)', targetMuscles: ['Peito'], equipment: 'Cabo', difficulty: 'Intermediário', gifUrl: '/exercises/cross-media.gif' },
   { name: 'Crossover (Polia Baixa)', targetMuscles: ['Peito'], equipment: 'Cabo', difficulty: 'Intermediário', gifUrl: '/exercises/cross-baixa.gif' },
-  { name: 'Pullover', targetMuscles: ['Peito', 'Costas'], equipment: 'Halter', difficulty: 'Intermediário', gifUrl: 'pullover' },
-  { name: 'Flexão de Braços', targetMuscles: ['Peito', 'Tríceps', 'Ombros'], equipment: 'Peso Corporal', difficulty: 'Iniciante', gifUrl: 'flexao' },
+  { name: 'Pullover', targetMuscles: ['Peito', 'Costas'], equipment: 'Halter', difficulty: 'Intermediário', gifUrl: '/exercises/pullover.gif' },
+  { name: 'Flexão de Braços', targetMuscles: ['Peito', 'Tríceps', 'Ombros'], equipment: 'Peso Corporal', difficulty: 'Iniciante', gifUrl: '/exercises/flexao.gif' },
 
   // --- COSTAS ---
   { name: 'Puxada Frontal (Pulldown)', targetMuscles: ['Costas', 'Bíceps'], equipment: 'Máquina', difficulty: 'Iniciante', gifUrl: '/exercises/puxada.gif' },
@@ -110,15 +108,12 @@ const seedDB = async () => {
     await mongoose.connect(process.env.MONGO_URI as string);
     console.log('✅ MongoDB Conectado para o Seed...');
 
-    // 🚨 PASSO 1: A FAXINA GERAL (Rode assim na primeira vez)
-    // Isso vai apagar toda a bagunça antiga.
-    // DICA: Depois que rodar a primeira vez, coloque um "//" na frente dessa linha para o futuro!
-    await Exercise.deleteMany({});
-    console.log('🧹 Banco de dados limpo! Todos os exercícios antigos foram apagados.');
+    //await Exercise.deleteMany({});
+    //console.log('🧹 Banco de dados limpo! Todos os exercícios antigos foram apagados.');
 
     const bulkOperations = exercises.map((ex) => ({
       updateOne: {
-        filter: { name: ex.name }, // Busca pelo nome
+        filter: { name: ex.name },
         update: { 
           $set: {
             name: ex.name,
@@ -128,7 +123,7 @@ const seedDB = async () => {
             gifUrl: ex.gifUrl 
           } 
         },
-        upsert: true // Se não achar o nome, ele cria. Se achar, ele apenas atualiza os dados.
+        upsert: true
       }
     }));
 
