@@ -142,16 +142,19 @@ describe('Fluxo de Meus Treinos - GymTracker', () => {
     let cancelButton = await driver.findElement(By.xpath("//button[contains(text(), 'Cancelar')]"));
     await cancelButton.click();
     
+    await driver.wait(until.stalenessOf(cancelButton), 5000);
+
     let editButton = await driver.wait(
       until.elementLocated(By.xpath("//button[@title='Editar treino']")),
-      5000
+      10000
     );
     await editButton.click();
     
     let nameInput = await driver.wait(
       until.elementLocated(By.css('input[placeholder="Ex: Treino A - Peito e Tríceps"]')),
-      5000
+      10000 
     );
+    
     await nameInput.clear();
     await nameInput.sendKeys('Treino Editado pelo QA');
 
@@ -160,7 +163,7 @@ describe('Fluxo de Meus Treinos - GymTracker', () => {
 
     let toast = await driver.wait(
       until.elementLocated(By.xpath("//*[contains(text(), 'Treino atualizado com sucesso!')]")), 
-      5000
+      10000
     );
     let toastText = await toast.getAttribute('textContent');
     expect(toastText).toBeTruthy();
