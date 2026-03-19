@@ -135,5 +135,4 @@ describe('Fluxo de Cadastro - GymTracker', () => {
 
     await driver.wait(until.urlIs('http://localhost:3000/'), 15000);
     expect(await driver.getCurrentUrl()).toBe('http://localhost:3000/');
-  });
-});
+  });}, 10000);;
