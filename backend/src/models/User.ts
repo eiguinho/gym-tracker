@@ -10,6 +10,8 @@ export interface IUser extends Document {
   avatarIcon: string;
   resetPasswordCode?: string;
   resetPasswordExpires?: Date;
+  level: 'iniciante' | 'intermediario' | 'avancado';
+  focus?: 'hipertrofia_geral' | 'inferiores' | 'superiores' | 'emagrecimento' | 'forca';
 }
 
 const userSchema = new Schema<IUser>(
@@ -24,6 +26,16 @@ const userSchema = new Schema<IUser>(
     avatarIcon: { type: String, default: 'User' },
     resetPasswordCode: { type: String },
     resetPasswordExpires: { type: Date },
+    
+    level: { 
+      type: String, 
+      enum: ['iniciante', 'intermediario', 'avancado'], 
+      default: 'iniciante' 
+    },
+    focus: { 
+      type: String, 
+      enum: ['hipertrofia_geral', 'inferiores', 'superiores', 'emagrecimento', 'forca'] 
+    },
   },
   { timestamps: true }
 );

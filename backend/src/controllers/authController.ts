@@ -74,6 +74,8 @@ export const verifyEmail = async (req: Request, res: Response): Promise<any> => 
       name: user.name,
       email: user.email,
       avatarIcon: user.avatarIcon,
+      level: user.level,
+      focus: user.focus,
       token: generateToken(user._id.toString()),
       message: 'E-mail verificado com sucesso!',
     });
@@ -98,6 +100,8 @@ export const login = async (req: Request, res: Response): Promise<any> => {
         name: user.name,
         email: user.email,
         avatarIcon: user.avatarIcon,
+        level: user.level,
+        focus: user.focus,
         token: generateToken(user._id.toString()),
         message: 'Usuário logado com sucesso!',
       });
@@ -158,7 +162,7 @@ export const resetPassword = async (req: Request, res: Response): Promise<any> =
 
 export const updateProfile = async (req: any, res: Response): Promise<any> => {
   try {
-    const { name, avatarIcon } = req.body;
+    const { name, avatarIcon, level, focus } = req.body;
     const userId = req.user?._id;
 
     if (!userId) {
@@ -167,7 +171,7 @@ export const updateProfile = async (req: any, res: Response): Promise<any> => {
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { name, avatarIcon },
+      { name, avatarIcon, level, focus },
       { returnDocument: 'after' } 
     ).select('-passwordHash');
 
@@ -181,7 +185,9 @@ export const updateProfile = async (req: any, res: Response): Promise<any> => {
         id: user._id,
         name: user.name,
         email: user.email,
-        avatarIcon: user.avatarIcon
+        avatarIcon: user.avatarIcon,
+        level: user.level,
+        focus: user.focus
       }
     });
   } catch (error) {
