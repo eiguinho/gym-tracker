@@ -48,6 +48,15 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
     await driver.findElement(By.css('button[type="submit"]')).click();
 
     await driver.wait(until.urlContains('/dashboard'), 10000);
+
+    let startJourneyBtn = await driver.wait(
+      until.elementLocated(By.xpath("//button[contains(., 'Começar Minha Jornada')]")),
+      10000
+    );
+    await driver.sleep(1000);
+    await startJourneyBtn.click();
+    
+    await driver.wait(until.stalenessOf(startJourneyBtn), 5000);
   });
 
   it('1. Deve exibir aviso ao tentar salvar com nome vazio', async () => {
@@ -83,7 +92,7 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
     expect(await toast.getAttribute('textContent')).toBeTruthy();
     
     await driver.wait(until.stalenessOf(toast), 5000);
-  });
+  }, 10000);
 
   it('3. Deve fazer logout e redirecionar para a tela inicial', async () => {
     let headerProfileButton = await driver.wait(
@@ -104,11 +113,15 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
   });
 
   it('4. Deve logar novamente com a conta criada para testar a exclusão', async () => {
-    await driver.wait(until.elementLocated(By.css('input[type="email"]')), 5000).sendKeys(tempEmail);
+    await driver.get('http://localhost:3000/');
+    let emailInput = await driver.wait(until.elementLocated(By.css('input[type="email"]')), 10000);
+    await emailInput.sendKeys(tempEmail);
+
     await driver.findElement(By.css('input[type="password"]')).sendKeys(tempPass);
     await driver.findElement(By.css('button[type="submit"]')).click();
 
     await driver.wait(until.urlContains('/dashboard'), 10000);
+    
   });
 
   it('5. Deve cancelar a exclusão da conta ao clicar em Cancelar no alerta', async () => {

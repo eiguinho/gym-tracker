@@ -121,6 +121,14 @@ describe('Fluxo de Cadastro - GymTracker', () => {
     
     await driver.get('http://localhost:3000/dashboard/profile');
     
+    let startJourneyBtn = await driver.wait(
+      until.elementLocated(By.xpath("//button[contains(., 'Começar Minha Jornada')]")),
+      10000
+    );
+    await driver.sleep(1000);
+    await startJourneyBtn.click();
+    await driver.wait(until.stalenessOf(startJourneyBtn), 5000);
+
     let deleteBtn = await driver.wait(
       until.elementLocated(By.xpath("//button[contains(., 'Excluir Conta')]")),
       10000
@@ -135,4 +143,5 @@ describe('Fluxo de Cadastro - GymTracker', () => {
 
     await driver.wait(until.urlIs('http://localhost:3000/'), 15000);
     expect(await driver.getCurrentUrl()).toBe('http://localhost:3000/');
-  });}, 10000);;
+  }, 30000);
+});
