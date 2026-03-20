@@ -40,7 +40,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data._id, 
         name: data.name, 
         email: data.email, 
-        avatarIcon: data.avatarIcon 
+        avatarIcon: data.avatarIcon,
+        level: data.level,
+        focus: data.focus
       }
 
       setSession(data.token, userData)
@@ -60,7 +62,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: data._id, 
         name: data.name, 
         email: data.email, 
-        avatarIcon: data.avatarIcon 
+        avatarIcon: data.avatarIcon,
+        level: data.level,
+        focus: data.focus
       }
 
       setSession(data.token, userData)

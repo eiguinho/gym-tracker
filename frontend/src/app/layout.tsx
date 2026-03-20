@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import "./globals.css";
 import { ThemeProvider } from '@/providers/theme-provider'
-import { AuthProvider } from '../providers/auth-provider'
+import { AuthProvider } from '@/providers/auth-provider'
 import { Toaster } from 'sonner'
+import { OnboardingModal } from '@/components/auth/onboarding-modal'
 
 const jakarta = Plus_Jakarta_Sans({ 
   subsets: ['latin'], 
@@ -29,6 +30,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             {children}
+            <OnboardingModal />
           </AuthProvider>
         </ThemeProvider>
         <Toaster position="top-right" richColors closeButton />

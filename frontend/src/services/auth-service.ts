@@ -25,7 +25,7 @@ export const authService = {
     const response = await api.delete('/auth/profile');
     return response.data;
   },
-  updateProfile: async (data: { name: string; avatarIcon: string }) => {
+  updateProfile: async (data: { name?: string; avatarIcon?: string; level?: string; focus?: string; }) => {
     const response = await api.put('/auth/profile', data);
     return response.data;
   }
