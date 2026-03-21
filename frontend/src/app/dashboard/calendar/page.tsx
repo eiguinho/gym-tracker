@@ -37,7 +37,9 @@ export default function CalendarPage() {
   const selectedDayLogs = logs.filter(log => isSameDay(new Date(log.date), selectedDate))
   const selectedDaySleepLog = sleepLogs.find(log => isSameDay(new Date(log.date), selectedDate))
 
-  const activeWorkout = workouts.find(w => w._id === activeId) || 
+  const activeWorkouts = workouts.filter(w => w.isActive);
+
+  const activeWorkout = activeWorkouts.find(w => w._id === activeId) || 
                         logs.find(l => l._id === activeId)?.workout;
 
   return (
@@ -52,7 +54,7 @@ export default function CalendarPage() {
 
           <div className="mt-8 flex flex-col gap-6 lg:flex-row">
             <div className="hidden lg:block w-80 shrink-0">
-              <WorkoutSidebar workouts={workouts} loading={loading} />
+              <WorkoutSidebar workouts={activeWorkouts} loading={loading} />
             </div>
             
             <div className="flex-1 flex flex-col gap-6">
@@ -83,9 +85,13 @@ export default function CalendarPage() {
               />
 
               <DaySummary 
-                selectedDate={selectedDate} dayLogs={selectedDayLogs} daySleepLog={selectedDaySleepLog} allWorkouts={workouts}
+                selectedDate={selectedDate}
+                dayLogs={selectedDayLogs}
+                daySleepLog={selectedDaySleepLog}
+                allWorkouts={activeWorkouts}
                 onAddWorkoutClick={() => setIsScheduleModalOpen(true)}
-                onDeleteWorkout={handleDeleteLog} onDeleteSleep={handleDeleteSleep}
+                onDeleteWorkout={handleDeleteLog} 
+                onDeleteSleep={handleDeleteSleep}
               />
             </div>
           </div>
@@ -107,7 +113,9 @@ export default function CalendarPage() {
         />
 
         <ScheduleWorkoutModal 
-          isOpen={isScheduleModalOpen} onClose={() => setIsScheduleModalOpen(false)} workouts={workouts}
+          isOpen={isScheduleModalOpen} 
+          onClose={() => setIsScheduleModalOpen(false)}
+          workouts={activeWorkouts}
           onSelectWorkout={(id) => {
             handleScheduleWorkout(id);
             setIsScheduleModalOpen(false);
