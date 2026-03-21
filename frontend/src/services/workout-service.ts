@@ -6,7 +6,7 @@ export const workoutService = {
     const response = await api.get('/workouts')
     return response.data
   },
-  delete: async (id: string) => {
+  delete: async (id: string): Promise<void> => {
     await api.delete(`/workouts/${id}`)
   },
   getExercises: async (): Promise<Exercise[]> => {
@@ -25,7 +25,14 @@ export const workoutService = {
     const response = await api.put(`/workouts/${id}`, data)
     return response.data
   },
-  // --- MÉTODOS DO CALENDÁRIO (WORKOUT LOGS) ---
+  toggleActive: async (id: string, isActive: boolean, routineOrder?: number): Promise<{ message: string; workout: Workout }> => {
+    const response = await api.patch(`/workouts/${id}/toggle-active`, { isActive, routineOrder })
+    return response.data
+  },
+  updateOrders: async (updates: { id: string, routineOrder: number }[]): Promise<{ message: string }> => {
+    const response = await api.patch('/workouts/reorder', { updates })
+    return response.data
+  },
   scheduleWorkout: async (workoutId: string, date: Date) => {
     const response = await api.post('/workout-logs', { workout: workoutId, date })
     return response.data

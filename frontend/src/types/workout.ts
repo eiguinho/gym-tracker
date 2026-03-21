@@ -17,6 +17,8 @@ export interface Workout {
   title: string
   exercises: WorkoutExercise[]
   intensityLevel: 'Leve' | 'Moderado' | 'Intenso' | 'Insano'
+  isActive: boolean;
+  routineOrder: number;
   createdAt: string
 }
 
