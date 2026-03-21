@@ -65,28 +65,40 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
     await nameInput.sendKeys(Key.CONTROL, 'a', Key.BACK_SPACE);
 
     let submitButton = await driver.findElement(By.css('button[type="submit"]'));
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
+    await driver.sleep(500);
     await submitButton.click();
 
     let validationMsg = await nameInput.getAttribute('validationMessage');
     expect(validationMsg).toMatch(/(Preencha|fill out)/i);
   });
 
-  it('2. Deve atualizar o nome e o avatar com sucesso e exibir o Toast', async () => {
+  it('2. Deve atualizar o nome, preferencias e o avatar com sucesso e exibir o Toast', async () => {
     let nameInput = await driver.findElement(By.css('input'));
     await nameInput.sendKeys(Key.CONTROL, 'a', Key.BACK_SPACE);
     await nameInput.sendKeys('Igor Editado QA');
 
     let avatarButtons = await driver.findElements(By.css('button.h-16.w-16'));
     if (avatarButtons.length > 1) {
-      await avatarButtons[1].click(); 
+      await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", avatarButtons[1]);
       await driver.sleep(500); 
+      await avatarButtons[1].click(); 
+    }
+
+    let selects = await driver.findElements(By.css('select'));
+    if (selects.length >= 2) {
+      await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", selects[0]);
+      await selects[0].sendKeys('Iniciante');
+      await selects[1].sendKeys('Força');
     }
 
     let submitButton = await driver.findElement(By.css('button[type="submit"]'));
+    await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", submitButton);
+    await driver.sleep(500);
     await submitButton.click();
 
     let toast = await driver.wait(
-      until.elementLocated(By.xpath("//*[contains(text(), 'Perfil atualizado!')]")), 
+      until.elementLocated(By.xpath("//*[contains(text(), 'Perfil atualizado')]")), 
       5000
     );
     expect(await toast.getAttribute('textContent')).toBeTruthy();
