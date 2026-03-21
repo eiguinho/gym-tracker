@@ -43,3 +43,24 @@ export interface WorkoutLog {
   status: 'planned' | 'completed' | 'skipped';
   durationMinutes?: number;
 }
+
+export type TemplateLevel = 'Iniciante' | 'Intermediário' | 'Avançado';
+export type TemplateFocus = 'Força' | 'Superiores' | 'Inferiores' | 'Full Body' | 'PPL';
+
+export interface WorkoutTemplate {
+  _id: string;
+  title: string;
+  description: string;
+  level: TemplateLevel;
+  focus: TemplateFocus;
+  workouts: {
+    _id: string;
+    title: string;
+    exercises: {
+      exercise: Exercise;
+      sets: number;
+      reps: string;
+      notes?: string;
+    }[];
+  }[];
+}

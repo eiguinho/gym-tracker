@@ -10,7 +10,7 @@ import { toast } from 'sonner'
 import { authService } from '@/services/auth-service'
 import { 
   User, Dumbbell, Flame, Zap, HeartPulse, Trophy, 
-  Save, CheckCircle2, Trash2, AlertTriangle 
+  Save, CheckCircle2, Trash2, AlertTriangle, Target
 } from 'lucide-react'
 
 const AVATARS = [
@@ -22,6 +22,9 @@ const AVATARS = [
   { id: 'Trophy', icon: Trophy },
 ]
 
+const LEVELS = ['Iniciante', 'Intermediário', 'Avançado']
+const FOCUSES = ['Força', 'Superiores', 'Inferiores', 'Full Body', 'PPL']
+
 export default function ProfilePage() {
   const { user, setUser, signOut } = useAuth()
   const [loading, setLoading] = useState(false)
@@ -29,15 +32,17 @@ export default function ProfilePage() {
   
   const [name, setName] = useState(user?.name || '')
   const [avatarIcon, setAvatarIcon] = useState(user?.avatarIcon || 'User')
+  const [level, setLevel] = useState(user?.level || '')
+  const [focus, setFocus] = useState(user?.focus || '')
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
-      const data = await authService.updateProfile({ name, avatarIcon })
+      const data = await authService.updateProfile({ name, avatarIcon, level, focus })
       setUser(data.user)
       localStorage.setItem('@gymtracker:user', JSON.stringify(data.user))
-      toast.success('Perfil atualizado!')
+      toast.success('Perfil atualizado com sucesso!')
     } catch (error) {
       toast.error('Erro ao atualizar perfil')
     } finally {
@@ -69,11 +74,11 @@ export default function ProfilePage() {
       <div className="mx-auto max-w-2xl">
         <PageHeader 
           title="Meu Perfil" 
-          description="Gerencie suas informações pessoais e aparência" 
+          description="Gerencie suas informações e preferências de treino" 
         />
 
         <BaseCard className="mt-8 p-6">
-          <form onSubmit={handleSave} className="space-y-6">
+          <form onSubmit={handleSave} className="space-y-8">
             <div className="space-y-4">
               <label className="text-sm font-medium text-muted-foreground">Avatar de Perfil</label>
               <div className="flex flex-wrap justify-center gap-4 py-2">
@@ -110,6 +115,48 @@ export default function ProfilePage() {
                 <label className="text-sm font-medium leading-none text-muted-foreground">E-mail</label>
                 <div className="flex h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground opacity-70 cursor-not-allowed">
                   {user?.email}
+                </div>
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-border">
+              <h4 className="text-sm font-semibold mb-4 flex items-center gap-2 text-indigo-600 dark:text-indigo-400">
+                <Target size={18} />
+                Preferências do Coach (Sugestões de Treino)
+              </h4>
+              <div className="grid gap-6 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Seu Nível
+                  </label>
+                  <select
+                    value={level}
+                    onChange={(e) => setLevel(e.target.value)}
+                    required
+                    className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:focus:ring-indigo-500"
+                  >
+                    <option value="" disabled>Selecione um nível</option>
+                    {LEVELS.map(l => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Seu Foco Principal
+                  </label>
+                  <select
+                    value={focus}
+                    onChange={(e) => setFocus(e.target.value)}
+                    required
+                    className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:focus:ring-indigo-500"
+                  >
+                    <option value="" disabled>Selecione um foco</option>
+                    {FOCUSES.map(f => (
+                      <option key={f} value={f}>{f}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>

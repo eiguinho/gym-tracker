@@ -1,5 +1,5 @@
 import api from '@/lib/api'
-import { Workout, Exercise, CreateWorkoutDTO } from '@/types/workout'
+import { Workout, Exercise, CreateWorkoutDTO, WorkoutTemplate } from '@/types/workout'
 
 export const workoutService = {
   getAll: async (): Promise<Workout[]> => {
@@ -55,6 +55,14 @@ export const workoutService = {
   },
   getDashboardStats: async () => {
     const response = await api.get('/stats/dashboard')
+    return response.data
+  },
+  getTemplates: async (): Promise<WorkoutTemplate[]> => {
+    const response = await api.get('/workout-templates')
+    return response.data
+  },
+  cloneTemplate: async (id: string): Promise<{ message: string; workouts: Workout[] }> => {
+    const response = await api.post(`/workout-templates/${id}/clone`)
     return response.data
   },
 }

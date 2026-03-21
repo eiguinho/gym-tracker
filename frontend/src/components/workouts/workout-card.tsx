@@ -13,10 +13,11 @@ interface WorkoutCardProps {
   isFirstActive?: boolean
   isLastActive?: boolean
   canActivate?: boolean
+  activeIndex?: number
 }
 
 export function WorkoutCard({ 
-  workout, onDelete, onEdit, onToggleActive, onMoveUp, onMoveDown, isFirstActive, isLastActive, canActivate 
+  workout, onDelete, onEdit, onToggleActive, onMoveUp, onMoveDown, isFirstActive, isLastActive, canActivate, activeIndex 
 }: WorkoutCardProps) {
   
   const intensityStyles: Record<string, string> = {
@@ -26,7 +27,9 @@ export function WorkoutCard({
     Insano: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
   }
 
-  const routineLetter = workout.isActive ? String.fromCharCode(65 + (workout.routineOrder || 0)) : null;
+  const routineLetter = workout.isActive && activeIndex !== undefined && activeIndex >= 0 
+    ? String.fromCharCode(65 + activeIndex) 
+    : null;
 
   return (
     <BaseCard className={`p-6 transition-all hover:shadow-md ${workout.isActive ? 'border-indigo-500 ring-1 ring-indigo-500 shadow-sm' : ''} hover:border-indigo-300 dark:hover:border-indigo-800 group relative`}>
