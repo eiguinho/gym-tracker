@@ -106,7 +106,21 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
     await driver.wait(until.stalenessOf(toast), 5000);
   }, 10000);
 
-  it('3. Deve fazer logout e redirecionar para a tela inicial', async () => {
+  it('3. Deve persistir as preferências de Nível e Foco após recarregar a página', async () => {
+    await driver.get('http://localhost:3000/dashboard/profile');
+    await driver.sleep(1500);
+
+    let selects = await driver.findElements(By.css('select'));
+    expect(selects.length).toBeGreaterThanOrEqual(2);
+
+    let levelValue = await selects[0].getAttribute('value');
+    let focusValue = await selects[1].getAttribute('value');
+
+    expect(levelValue).toBe('Iniciante');
+    expect(focusValue).toBe('Força');
+  });
+
+  it('4. Deve fazer logout e redirecionar para a tela inicial', async () => {
     let headerProfileButton = await driver.wait(
       until.elementLocated(By.css("header .relative button")),
       5000
@@ -124,7 +138,7 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
     expect(await driver.getCurrentUrl()).toBe('http://localhost:3000/');
   });
 
-  it('4. Deve logar novamente com a conta criada para testar a exclusão', async () => {
+  it('5. Deve logar novamente com a conta criada para testar a exclusão', async () => {
     await driver.get('http://localhost:3000/');
     let emailInput = await driver.wait(until.elementLocated(By.css('input[type="email"]')), 10000);
     await emailInput.sendKeys(tempEmail);
@@ -136,7 +150,7 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
     
   });
 
-  it('5. Deve cancelar a exclusão da conta ao clicar em Cancelar no alerta', async () => {
+  it('6. Deve cancelar a exclusão da conta ao clicar em Cancelar no alerta', async () => {
     await driver.get('http://localhost:3000/dashboard/profile');
     
     let deleteBtn = await driver.wait(until.elementLocated(By.xpath("//button[contains(., 'Excluir Conta')]")), 8000);
@@ -145,12 +159,12 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
     
     await deleteBtn.click();
     await driver.wait(until.alertIsPresent(), 4000);
-    await (await driver.switchTo().alert()).dismiss(); // CANCELA
+    await (await driver.switchTo().alert()).dismiss();
 
     expect(await driver.getCurrentUrl()).toContain('/dashboard/profile');
   });
 
-  it('6. Deve excluir a conta permanentemente ao clicar em OK no alerta', async () => {
+  it('7. Deve excluir a conta permanentemente ao clicar em OK no alerta', async () => {
     let deleteBtn = await driver.wait(until.elementLocated(By.xpath("//button[contains(., 'Excluir Conta')]")), 5000);
     
     await deleteBtn.click();
