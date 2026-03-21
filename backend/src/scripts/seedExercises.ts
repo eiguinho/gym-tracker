@@ -106,12 +106,12 @@ const exercises = [
 const seedDB = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI as string);
-    console.log('✅ MongoDB Conectado para o Seed...');
+    console.log('MongoDB Conectado para o Seed...');
 
     //await Exercise.deleteMany({});
-    //console.log('🧹 Banco de dados limpo! Todos os exercícios antigos foram apagados.');
+    //console.log('Banco de dados limpo! Todos os exercícios antigos foram apagados.');
 
-    const bulkOperations = exercises.map((ex) => ({
+    const bulkOperations: mongoose.mongo.AnyBulkWriteOperation<any>[] = exercises.map((ex) => ({
       updateOne: {
         filter: { name: ex.name },
         update: { 
@@ -127,15 +127,15 @@ const seedDB = async () => {
       }
     }));
 
-    const result = await Exercise.bulkWrite(bulkOperations as any);
+    const result = await Exercise.bulkWrite(bulkOperations);
     
-    console.log(`✅ Sincronização concluída!`);
-    console.log(`🌱 Novos inseridos: ${result.upsertedCount}`);
-    console.log(`🔄 Atualizados/Verificados: ${result.matchedCount}`);
+    console.log(`Sincronização concluída!`);
+    console.log(`Novos inseridos: ${result.upsertedCount}`);
+    console.log(`Atualizados/Verificados: ${result.matchedCount}`);
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Erro ao popular a base de dados:', error);
+    console.error('Erro ao popular a base de dados:', error);
     process.exit(1);
   }
 };

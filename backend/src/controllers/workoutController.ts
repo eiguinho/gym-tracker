@@ -4,13 +4,7 @@ import Workout from '../models/Workout';
 import Exercise from '../models/Exercise';
 import WorkoutLog from '../models/WorkoutLog';
 import { ExerciseInput, IntensityLevel, UpdateOrderInput } from '../types/workout';
-
-const calculateIntensity = (numExercises: number): IntensityLevel => {
-  if (numExercises <= 3) return 'Leve';
-  if (numExercises <= 5) return 'Moderado';
-  if (numExercises <= 7) return 'Intenso';
-  return 'Insano';
-};
+import { calculateIntensity } from '../utils/workoutUtils';
 
 const hasDuplicateExercises = (exercises: ExerciseInput[]): boolean => {
   const exerciseIds = exercises.map((e) => e.exercise.toString());
