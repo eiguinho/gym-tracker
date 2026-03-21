@@ -8,6 +8,7 @@ import workoutLogRoutes from './routes/workoutLogRoutes';
 import statsRoutes from './routes/statsRoutes';
 import sleepRoutes from './routes/sleepRoutes';
 import exerciseRoutes from './routes/exerciseRoutes';
+import templateRoutes from './routes/templateRoutes'
 
 dotenv.config();
 
@@ -29,6 +30,7 @@ app.use('/api/workout-logs', workoutLogRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/sleep', sleepRoutes);
 app.use('/api/exercises', exerciseRoutes);
+app.use('/api/workout-templates', templateRoutes);
 
 const PORT = process.env.PORT || 5000;
 
