@@ -1,31 +1,32 @@
 import { Request, Response } from 'express';
+import mongoose from 'mongoose';
 import Workout from '../models/Workout';
 import Exercise from '../models/Exercise';
 import WorkoutLog from '../models/WorkoutLog';
+import { ExerciseInput, IntensityLevel, UpdateOrderInput } from '../types/workout';
 
-const calculateIntensity = (numExercises: number): string => {
+const calculateIntensity = (numExercises: number): IntensityLevel => {
   if (numExercises <= 3) return 'Leve';
   if (numExercises <= 5) return 'Moderado';
   if (numExercises <= 7) return 'Intenso';
-  return 'Insano (Cuidado!)';
+  return 'Insano';
 };
 
-const hasDuplicateExercises = (exercises: any[]): boolean => {
-  const exerciseIds = exercises.map((e: any) => e.exercise);
-  const uniqueIds = new Set(exerciseIds);
-  return exerciseIds.length !== uniqueIds.size;
+const hasDuplicateExercises = (exercises: ExerciseInput[]): boolean => {
+  const exerciseIds = exercises.map((e) => e.exercise.toString());
+  return exerciseIds.length !== new Set(exerciseIds).size;
 };
 
-export const getAvailableExercises = async (req: Request, res: Response) => {
+export const getAvailableExercises = async (req: Request, res: Response): Promise<void | Response> => {
   try {
     const exercises = await Exercise.find({}).sort({ name: 1 });
-    res.json(exercises);
+    return res.json(exercises);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar exercícios' });
+    return res.status(500).json({ message: 'Erro ao buscar exercícios' });
   }
 };
 
-export const getWorkoutById = async (req: any, res: Response): Promise<any> => {
+export const getWorkoutById = async (req: Request, res: Response): Promise<void | Response> => {
   try {
     const workout = await Workout.findById(req.params.id).populate(
       'exercises.exercise',
@@ -33,17 +34,20 @@ export const getWorkoutById = async (req: any, res: Response): Promise<any> => {
     );
 
     if (!workout) return res.status(404).json({ message: 'Treino não encontrado' });
-    if (workout.user.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Não autorizado' });
+    
+    if (workout.user.toString() !== req.user!._id.toString()) {
+      return res.status(401).json({ message: 'Não autorizado' });
+    }
 
-    res.json(workout);
+    return res.json(workout);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar o treino' });
+    return res.status(500).json({ message: 'Erro ao buscar o treino' });
   }
 };
 
-export const createWorkout = async (req: any, res: Response): Promise<any> => {
+export const createWorkout = async (req: Request, res: Response): Promise<void | Response> => {
   try {
-    const { title, exercises } = req.body;
+    const { title, exercises }: { title: string; exercises: ExerciseInput[] } = req.body;
 
     if (!exercises || exercises.length === 0) {
       return res.status(400).json({ message: 'O treino precisa ter pelo menos um exercício.' });
@@ -54,53 +58,55 @@ export const createWorkout = async (req: any, res: Response): Promise<any> => {
     }
 
     const workout = await Workout.create({
-      user: req.user._id,
+      user: req.user!._id,
       title,
       exercises,
       intensityLevel: calculateIntensity(exercises.length),
+      isActive: false,
+      routineOrder: 0,
     });
 
-    res.status(201).json(workout);
+    return res.status(201).json(workout);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao criar treino', error });
+    return res.status(500).json({ message: 'Erro ao criar treino' });
   }
 };
 
-export const getMyWorkouts = async (req: any, res: Response) => {
+export const getMyWorkouts = async (req: Request, res: Response): Promise<void | Response> => {
   try {
-    const workouts = await Workout.find({ user: req.user._id }).populate(
-      'exercises.exercise',
-      'name targetMuscles'
-    );
-    res.json(workouts);
+    const workouts = await Workout.find({ user: req.user!._id })
+      .populate('exercises.exercise', 'name targetMuscles')
+      .sort({ isActive: -1, routineOrder: 1, createdAt: -1 }); 
+      
+    return res.json(workouts);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar treinos' });
+    return res.status(500).json({ message: 'Erro ao buscar treinos' });
   }
 };
 
-export const deleteWorkout = async (req: Request, res: Response): Promise<any> => {
+export const deleteWorkout = async (req: Request, res: Response): Promise<void | Response> => {
   try {
     const workout = await Workout.findById(req.params.id);
 
     if (!workout) return res.status(404).json({ message: 'Treino não encontrado' });
-    if (workout.user.toString() !== (req as any).user.id) return res.status(401).json({ message: 'Não autorizado' });
+    if (workout.user.toString() !== req.user!._id.toString()) return res.status(401).json({ message: 'Não autorizado' });
 
     await WorkoutLog.deleteMany({ workout: workout._id });
     await workout.deleteOne();
     
-    res.status(200).json({ message: 'Treino e agendamentos removidos com sucesso' });
+    return res.status(200).json({ message: 'Treino removido com sucesso' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao remover treino' });
+    return res.status(500).json({ message: 'Erro ao remover treino' });
   }
 };
 
-export const updateWorkout = async (req: any, res: Response): Promise<any> => {
+export const updateWorkout = async (req: Request, res: Response): Promise<void | Response> => {
   try {
-    const { title, exercises } = req.body;
+    const { title, exercises }: { title: string; exercises: ExerciseInput[] } = req.body;
     const workout = await Workout.findById(req.params.id);
 
     if (!workout) return res.status(404).json({ message: 'Treino não encontrado' });
-    if (workout.user.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Não autorizado' });
+    if (workout.user.toString() !== req.user!._id.toString()) return res.status(401).json({ message: 'Não autorizado' });
 
     if (title) workout.title = title;
     
@@ -108,14 +114,76 @@ export const updateWorkout = async (req: any, res: Response): Promise<any> => {
       if (hasDuplicateExercises(exercises)) {
         return res.status(400).json({ message: 'Você não pode adicionar o mesmo exercício duas vezes no treino.' });
       }
-
-      workout.exercises = exercises;
-      workout.intensityLevel = calculateIntensity(exercises.length) as any;
+      workout.exercises = exercises as any;
+      workout.intensityLevel = calculateIntensity(exercises.length);
     }
 
     const updatedWorkout = await workout.save();
-    res.json(updatedWorkout);
+    return res.json(updatedWorkout);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao atualizar o treino', error });
+    return res.status(500).json({ message: 'Erro ao atualizar o treino' });
+  }
+};
+
+export const toggleWorkoutActive = async (req: Request, res: Response): Promise<void | Response> => {
+  try {
+    const { isActive }: { isActive: boolean } = req.body;
+    const userId = req.user!._id;
+    const workoutId = req.params.id;
+
+    const workout = await Workout.findById(workoutId);
+    if (!workout) return res.status(404).json({ message: 'Treino não encontrado' });
+
+    if (isActive) {
+      const activeCount = await Workout.countDocuments({ user: userId, isActive: true });
+      
+      if (activeCount >= 7) {
+        return res.status(400).json({ message: 'Você já atingiu o limite de 7 treinos ativos (A-G).' });
+      }
+
+      workout.isActive = true;
+      workout.routineOrder = activeCount;
+    } 
+    else {
+      const oldOrder = workout.routineOrder;
+      workout.isActive = false;
+      workout.routineOrder = 0;
+
+      await Workout.updateMany(
+        { user: userId, isActive: true, routineOrder: { $gt: oldOrder } },
+        { $inc: { routineOrder: -1 } }
+      );
+    }
+
+    await workout.save();
+    return res.json({ message: 'Rotina atualizada com sucesso', workout });
+  } catch (error) {
+    return res.status(500).json({ message: 'Erro ao processar rotina' });
+  }
+};
+
+export const updateWorkoutOrders = async (req: Request, res: Response): Promise<void | Response> => {
+  try {
+    const { updates }: { updates: UpdateOrderInput[] } = req.body;
+
+    if (!Array.isArray(updates) || updates.length === 0) {
+      return res.status(400).json({ message: 'Nenhuma atualização enviada.' });
+    }
+
+    const bulkOps = updates.map((update) => ({
+      updateOne: {
+        filter: { 
+          _id: new mongoose.Types.ObjectId(update.id),
+          user: req.user!._id 
+        },
+        update: { $set: { routineOrder: update.routineOrder } }
+      }
+    }));
+
+    await Workout.bulkWrite(bulkOps);
+
+    return res.json({ message: 'Ordem da rotina atualizada com sucesso' });
+  } catch (error) {
+    return res.status(500).json({ message: 'Erro ao reordenar a rotina' });
   }
 };

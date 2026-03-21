@@ -7,6 +7,8 @@ import {
   deleteWorkout,
   getWorkoutById,
   updateWorkout,
+  toggleWorkoutActive,
+  updateWorkoutOrders
 } from '../controllers/workoutController';
 
 const router = Router();
@@ -27,5 +29,8 @@ router.get('/', protect, getMyWorkouts); // Lista todos os treinos do usuário
 router.get('/:id', protect, getWorkoutById); // Busca UM treino específico
 router.put('/:id', protect, updateWorkout); // Atualiza UM treino específico
 router.delete('/:id', protect, deleteWorkout); // Deleta UM treino específico
+
+router.patch('/:id/toggle-active', protect, toggleWorkoutActive);
+router.patch('/reorder', protect, updateWorkoutOrders);
 
 export default router;

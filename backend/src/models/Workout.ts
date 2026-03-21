@@ -1,24 +1,35 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
-const workoutExerciseSchema = new Schema({
-  exercise: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Exercise', // Link com o catálogo
-    required: true,
-  },
-  sets: { type: Number, required: true }, // Ex: 4 séries
-  reps: { type: String, required: true }, // Ex: "12" ou "10-12"
-  notes: { type: String }, // Ex: "Drop-set na última"
-});
-
-export interface IWorkout extends Document {
-  user: mongoose.Schema.Types.ObjectId;
-  title: string;
-  exercises: any[];
-  intensityLevel: string; // Calculado (Leve, Moderado, Insano)
+interface IWorkoutExercise {
+  exercise: mongoose.Types.ObjectId;
+  sets: number;
+  reps: string;
+  notes?: string;
 }
 
-const workoutSchema = new Schema(
+export interface IWorkout extends Document {
+  user: mongoose.Types.ObjectId;
+  title: string;
+  exercises: IWorkoutExercise[];
+  intensityLevel: 'Leve' | 'Moderado' | 'Intenso' | 'Insano';
+  isActive: boolean;
+  routineOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const workoutExerciseSchema = new Schema<IWorkoutExercise>({
+  exercise: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Exercise',
+    required: true,
+  },
+  sets: { type: Number, required: true },
+  reps: { type: String, required: true },
+  notes: { type: String },
+});
+
+const workoutSchema = new Schema<IWorkout>(
   {
     user: {
       type: mongoose.Schema.Types.ObjectId,
@@ -32,6 +43,8 @@ const workoutSchema = new Schema(
       enum: ['Leve', 'Moderado', 'Intenso', 'Insano'],
       default: 'Leve',
     },
+    isActive: { type: Boolean, default: false },
+    routineOrder: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
