@@ -9,7 +9,7 @@ import { sendVerificationEmail } from '../utils/sendEmail';
 
 const generateVerificationCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-export const register = async (req: Request, res: Response): Promise<any> => {
+export const register = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { name, email, password, avatarIcon } = req.body;
 
@@ -37,7 +37,7 @@ export const register = async (req: Request, res: Response): Promise<any> => {
     if (user) {
       sendVerificationEmail(user.email, verificationCode).catch(console.error);
 
-      res.status(201).json({
+      return res.status(201).json({
         message: 'Usuário criado! Verifique seu e-mail com o código de segurança.',
         userId: user._id,
         email: user.email,
@@ -45,11 +45,11 @@ export const register = async (req: Request, res: Response): Promise<any> => {
       });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao registrar usuário', error });
+    return res.status(500).json({ message: 'Erro ao registrar usuário', error });
   }
 };
 
-export const verifyEmail = async (req: Request, res: Response): Promise<any> => {
+export const verifyEmail = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { email, code } = req.body;
     const user = await User.findOne({ email });
@@ -69,7 +69,7 @@ export const verifyEmail = async (req: Request, res: Response): Promise<any> => 
     user.verificationCodeExpires = undefined;
     await user.save();
 
-    res.status(200).json({
+    return res.status(200).json({
       _id: user._id,
       name: user.name,
       email: user.email,
@@ -80,11 +80,11 @@ export const verifyEmail = async (req: Request, res: Response): Promise<any> => 
       message: 'E-mail verificado com sucesso!',
     });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao verificar e-mail', error });
+    return res.status(500).json({ message: 'Erro ao verificar e-mail', error });
   }
 };
 
-export const login = async (req: Request, res: Response): Promise<any> => {
+export const login = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { email, password } = req.body;
 
@@ -95,7 +95,7 @@ export const login = async (req: Request, res: Response): Promise<any> => {
         return res.status(403).json({ message: 'Por favor, verifique seu e-mail antes de fazer login.' });
       }
 
-      res.json({
+      return res.json({
         _id: user._id,
         name: user.name,
         email: user.email,
@@ -106,14 +106,14 @@ export const login = async (req: Request, res: Response): Promise<any> => {
         message: 'Usuário logado com sucesso!',
       });
     } else {
-      res.status(401).json({ message: 'E-mail ou senha inválidos' });
+      return res.status(401).json({ message: 'E-mail ou senha inválidos' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao fazer login', error });
+    return res.status(500).json({ message: 'Erro ao fazer login', error });
   }
 };
 
-export const forgotPassword = async (req: Request, res: Response): Promise<any> => {
+export const forgotPassword = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { email } = req.body;
     const user = await User.findOne({ email });
@@ -129,13 +129,13 @@ export const forgotPassword = async (req: Request, res: Response): Promise<any> 
 
     await sendVerificationEmail(user.email, resetCode);
 
-    res.status(200).json({ message: 'Código de recuperação enviado para o seu e-mail.' });
+    return res.status(200).json({ message: 'Código de recuperação enviado para o seu e-mail.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao solicitar recuperação', error });
+    return res.status(500).json({ message: 'Erro ao solicitar recuperação', error });
   }
 };
 
-export const resetPassword = async (req: Request, res: Response): Promise<any> => {
+export const resetPassword = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { email, code, newPassword } = req.body;
     const user = await User.findOne({ 
@@ -154,13 +154,13 @@ export const resetPassword = async (req: Request, res: Response): Promise<any> =
     user.resetPasswordExpires = undefined;
     await user.save();
 
-    res.status(200).json({ message: 'Senha alterada com sucesso! Faça login agora.' });
+    return res.status(200).json({ message: 'Senha alterada com sucesso! Faça login agora.' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao redefinir senha', error });
+    return res.status(500).json({ message: 'Erro ao redefinir senha', error });
   }
 };
 
-export const updateProfile = async (req: any, res: Response): Promise<any> => {
+export const updateProfile = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { name, avatarIcon, level, focus } = req.body;
     const userId = req.user?._id;
@@ -179,7 +179,7 @@ export const updateProfile = async (req: any, res: Response): Promise<any> => {
       return res.status(404).json({ message: 'Usuário não encontrado' });
     }
 
-    res.json({
+    return res.json({
       message: 'Perfil atualizado com sucesso!',
       user: {
         id: user._id,
@@ -192,11 +192,11 @@ export const updateProfile = async (req: any, res: Response): Promise<any> => {
     });
   } catch (error) {
     console.error('Erro no updateProfile:', error);
-    res.status(500).json({ message: 'Erro ao atualizar perfil', error });
+    return res.status(500).json({ message: 'Erro ao atualizar perfil', error });
   }
 };
 
-export const deleteProfile = async (req: any, res: Response): Promise<any> => {
+export const deleteProfile = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const userId = req.user?._id;
 
@@ -214,9 +214,9 @@ export const deleteProfile = async (req: any, res: Response): Promise<any> => {
     await WorkoutLog.deleteMany({ userId });
     await SleepLog.deleteMany({ userId });
 
-    res.status(200).json({ message: 'Conta excluída com sucesso!' });
+    return res.status(200).json({ message: 'Conta excluída com sucesso!' });
   } catch (error) {
     console.error('Erro ao deletar perfil:', error);
-    res.status(500).json({ message: 'Erro ao excluir conta', error });
+    return res.status(500).json({ message: 'Erro ao excluir conta', error });
   }
 };

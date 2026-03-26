@@ -32,6 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(userData)
   }
 
+  const updateUserSession = (newUserData: User) => {
+    setUser(newUserData)
+    localStorage.setItem('@gymtracker:user', JSON.stringify(newUserData))
+  }
+
   async function signIn({ email, password }: any) {
     try {
       const data = await authService.login({ email, password })
@@ -87,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={{ 
       user, 
-      setUser, 
+      updateUserSession,
       isAuthenticated: !!user, 
       signIn, 
       verifyAndSignIn, 
