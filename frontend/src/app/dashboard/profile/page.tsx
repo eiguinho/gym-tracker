@@ -4,8 +4,10 @@ import { useState } from 'react'
 import { useAuth } from '@/providers/auth-provider'
 import { PageHeader } from '@/components/ui/page-header'
 import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { BaseCard } from '@/components/ui/base-card'
+import { AlertModal } from '@/components/ui/alert-modal'
 import { toast } from 'sonner'
 import { authService } from '@/services/auth-service'
 import { 
@@ -26,22 +28,29 @@ const LEVELS = ['Iniciante', 'Intermediário', 'Avançado']
 const FOCUSES = ['Força', 'Superiores', 'Inferiores', 'Full Body', 'PPL']
 
 export default function ProfilePage() {
-  const { user, setUser, signOut } = useAuth()
+  const { user, updateUserSession, signOut } = useAuth()
+  
   const [loading, setLoading] = useState(false)
+  const [isAlertOpen, setIsAlertOpen] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
   
-  const [name, setName] = useState(user?.name || '')
-  const [avatarIcon, setAvatarIcon] = useState(user?.avatarIcon || 'User')
-  const [level, setLevel] = useState(user?.level || '')
-  const [focus, setFocus] = useState(user?.focus || '')
+  const [formData, setFormData] = useState({
+    name: user?.name || '',
+    avatarIcon: user?.avatarIcon || 'User',
+    level: user?.level || '',
+    focus: user?.focus || ''
+  })
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }))
+  }
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     try {
-      const data = await authService.updateProfile({ name, avatarIcon, level, focus })
-      setUser(data.user)
-      localStorage.setItem('@gymtracker:user', JSON.stringify(data.user))
+      const data = await authService.updateProfile(formData)
+      updateUserSession(data.user)
       toast.success('Perfil atualizado com sucesso!')
     } catch (error) {
       toast.error('Erro ao atualizar perfil')
@@ -51,12 +60,6 @@ export default function ProfilePage() {
   }
 
   const handleDeleteAccount = async () => {
-    const confirmed = window.confirm(
-      "VOCÊ TEM CERTEZA? Isso excluirá permanentemente sua conta, treinos e registros de sono. Esta ação não pode ser desfeita."
-    )
-
-    if (!confirmed) return
-
     setDeleteLoading(true)
     try {
       await authService.deleteAccount()
@@ -66,6 +69,7 @@ export default function ProfilePage() {
       toast.error('Erro ao excluir conta.')
     } finally {
       setDeleteLoading(false)
+      setIsAlertOpen(false)
     }
   }
 
@@ -86,15 +90,15 @@ export default function ProfilePage() {
                   <button
                     key={id}
                     type="button"
-                    onClick={() => setAvatarIcon(id)}
+                    onClick={() => handleChange('avatarIcon', id)}
                     className={`group relative flex h-16 w-16 items-center justify-center rounded-full transition-all ${
-                      avatarIcon === id
+                      formData.avatarIcon === id
                         ? 'bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-100 dark:ring-indigo-900/50 scale-110'
                         : 'bg-muted text-muted-foreground hover:bg-muted/80'
                     }`}
                   >
-                    <Icon size={30} />
-                    {avatarIcon === id && (
+                    <Icon size={30} fill={formData.avatarIcon === id ? 'currentColor' : 'none'} />
+                    {formData.avatarIcon === id && (
                       <div className="absolute -right-1 -top-1 rounded-full bg-green-500 p-1 text-white shadow-sm">
                         <CheckCircle2 size={12} />
                       </div>
@@ -107,8 +111,8 @@ export default function ProfilePage() {
             <div className="grid gap-6 sm:grid-cols-2">
               <Input 
                 label="Nome" 
-                value={name} 
-                onChange={(e) => setName(e.target.value)} 
+                value={formData.name} 
+                onChange={(e) => handleChange('name', e.target.value)} 
                 required 
               />
               <div className="space-y-2">
@@ -125,39 +129,21 @@ export default function ProfilePage() {
                 Preferências do Coach (Sugestões de Treino)
               </h4>
               <div className="grid gap-6 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Seu Nível
-                  </label>
-                  <select
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value)}
-                    required
-                    className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:focus:ring-indigo-500"
-                  >
-                    <option value="" disabled>Selecione um nível</option>
-                    {LEVELS.map(l => (
-                      <option key={l} value={l}>{l}</option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  label="Seu Nível"
+                  value={formData.level}
+                  onChange={(e) => handleChange('level', e.target.value)}
+                  options={LEVELS}
+                  required
+                />
                 
-                <div>
-                  <label className="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Seu Foco Principal
-                  </label>
-                  <select
-                    value={focus}
-                    onChange={(e) => setFocus(e.target.value)}
-                    required
-                    className="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-gray-900 focus:ring-2 focus:ring-inset focus:ring-indigo-600 dark:bg-gray-800 dark:text-white dark:border-gray-700 dark:focus:ring-indigo-500"
-                  >
-                    <option value="" disabled>Selecione um foco</option>
-                    {FOCUSES.map(f => (
-                      <option key={f} value={f}>{f}</option>
-                    ))}
-                  </select>
-                </div>
+                <Select
+                  label="Seu Foco Principal"
+                  value={formData.focus}
+                  onChange={(e) => handleChange('focus', e.target.value)}
+                  options={FOCUSES}
+                  required
+                />
               </div>
             </div>
 
@@ -185,14 +171,24 @@ export default function ProfilePage() {
             </div>
             
             <button
-              onClick={handleDeleteAccount}
-              disabled={deleteLoading}
-              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors disabled:opacity-50 shrink-0"
+              onClick={() => setIsAlertOpen(true)}
+              className="flex items-center gap-2 rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700 transition-colors shrink-0"
             >
-              {deleteLoading ? <Spinner /> : <><Trash2 size={18} /> Excluir Conta</>}
+              <Trash2 size={18} /> Excluir Conta
             </button>
           </div>
         </BaseCard>
+
+        <AlertModal
+          isOpen={isAlertOpen}
+          onClose={() => setIsAlertOpen(false)}
+          onConfirm={handleDeleteAccount}
+          title="Você tem certeza absoluta?"
+          description="Isso excluirá permanentemente sua conta, treinos e registros de sono. Esta ação não pode ser desfeita."
+          confirmText="Sim, excluir minha conta"
+          loading={deleteLoading}
+        />
+
       </div>
     </div>
   )
