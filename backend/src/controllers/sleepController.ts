@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import SleepLog from '../models/SleepLog';
 
 const calculateSleepDuration = (bedTime: string, wakeTime: string): number => {
@@ -15,7 +15,7 @@ const calculateSleepDuration = (bedTime: string, wakeTime: string): number => {
   return wakeTotalMinutes - bedTotalMinutes;
 };
 
-export const saveSleepLog = async (req: any, res: Response): Promise<any> => {
+export const saveSleepLog = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { date, bedTime, wakeTime, qualityScore, notes } = req.body;
     const userId = req.user._id;
@@ -31,30 +31,34 @@ export const saveSleepLog = async (req: any, res: Response): Promise<any> => {
       { new: true, upsert: true }
     );
 
-    res.status(200).json(sleepLog);
+    return res.status(200).json(sleepLog);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao salvar o registro de sono', error });
+    return res.status(500).json({ message: 'Erro ao salvar o registro de sono', error });
   }
 };
 
-export const getSleepLogs = async (req: any, res: Response): Promise<any> => {
+export const getSleepLogs = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const userId = req.user._id;
     const { startDate, endDate } = req.query;
 
-    const query: any = { user: userId };
+    const query: Record<string, unknown> = { user: userId };
+    
     if (startDate && endDate) {
-      query.date = { $gte: new Date(startDate as string), $lte: new Date(endDate as string) };
+      query.date = { 
+        $gte: new Date(startDate as string), 
+        $lte: new Date(endDate as string) 
+      };
     }
 
     const logs = await SleepLog.find(query).sort({ date: 1 });
-    res.json(logs);
+    return res.json(logs);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar registros de sono', error });
+    return res.status(500).json({ message: 'Erro ao buscar registros de sono', error });
   }
 };
 
-export const deleteSleepLog = async (req: any, res: Response): Promise<any> => {
+export const deleteSleepLog = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { id } = req.params;
     const userId = req.user._id;
@@ -65,8 +69,8 @@ export const deleteSleepLog = async (req: any, res: Response): Promise<any> => {
       return res.status(404).json({ message: 'Registro de sono não encontrado' });
     }
 
-    res.status(200).json({ message: 'Registro de sono excluído com sucesso' });
+    return res.status(200).json({ message: 'Registro de sono excluído com sucesso' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao excluir registro de sono', error });
+    return res.status(500).json({ message: 'Erro ao excluir registro de sono', error });
   }
 };

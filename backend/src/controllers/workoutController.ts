@@ -94,7 +94,7 @@ export const deleteWorkout = async (req: Request, res: Response): Promise<void |
   }
 };
 
-export const updateWorkout = async (req: Request, res: Response): Promise<void | Response> => {
+export const updateWorkout = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { title, exercises }: { title: string; exercises: ExerciseInput[] } = req.body;
     const workout = await Workout.findById(req.params.id);
@@ -108,7 +108,7 @@ export const updateWorkout = async (req: Request, res: Response): Promise<void |
       if (hasDuplicateExercises(exercises)) {
         return res.status(400).json({ message: 'Você não pode adicionar o mesmo exercício duas vezes no treino.' });
       }
-      workout.exercises = exercises as any;
+      workout.exercises = exercises as typeof workout.exercises;
       workout.intensityLevel = calculateIntensity(exercises.length);
     }
 

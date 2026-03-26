@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import WorkoutLog from '../models/WorkoutLog';
 
-export const createWorkoutLog = async (req: any, res: Response): Promise<any> => {
+export const createWorkoutLog = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { workout, date } = req.body;
 
@@ -31,17 +31,17 @@ export const createWorkoutLog = async (req: any, res: Response): Promise<any> =>
       status: 'planned'
     });
 
-    res.status(201).json(log);
+    return res.status(201).json(log);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao agendar treino', error });
+    return res.status(500).json({ message: 'Erro ao agendar treino', error });
   }
 };
 
-export const getWorkoutLogs = async (req: any, res: Response): Promise<any> => {
+export const getWorkoutLogs = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { startDate, endDate } = req.query;
 
-    const query: any = { user: req.user._id };
+    const query: Record<string, unknown> = { user: req.user._id };
 
     if (startDate && endDate) {
       query.date = {
@@ -52,13 +52,13 @@ export const getWorkoutLogs = async (req: any, res: Response): Promise<any> => {
 
     const logs = await WorkoutLog.find(query).populate('workout', 'title intensityLevel');
 
-    res.json(logs);
+    return res.json(logs);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar agenda de treinos', error });
+    return res.status(500).json({ message: 'Erro ao buscar agenda de treinos', error });
   }
 };
 
-export const updateWorkoutLog = async (req: any, res: Response): Promise<any> => {
+export const updateWorkoutLog = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const { status, durationMinutes, date } = req.body;
     const log = await WorkoutLog.findById(req.params.id);
@@ -90,13 +90,13 @@ export const updateWorkoutLog = async (req: any, res: Response): Promise<any> =>
     if (durationMinutes) log.durationMinutes = durationMinutes;
 
     const updatedLog = await log.save();
-    res.json(updatedLog);
+    return res.json(updatedLog);
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao atualizar o registro', error });
+    return res.status(500).json({ message: 'Erro ao atualizar o registro', error });
   }
 };
 
-export const deleteWorkoutLog = async (req: any, res: Response): Promise<any> => {
+export const deleteWorkoutLog = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const log = await WorkoutLog.findById(req.params.id);
 
@@ -104,8 +104,8 @@ export const deleteWorkoutLog = async (req: any, res: Response): Promise<any> =>
     if (log.user.toString() !== req.user._id.toString()) return res.status(401).json({ message: 'Não autorizado' });
 
     await log.deleteOne();
-    res.status(200).json({ message: 'Treino removido do calendário' });
+    return res.status(200).json({ message: 'Treino removido do calendário' });
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao remover treino', error });
+    return res.status(500).json({ message: 'Erro ao remover treino', error });
   }
 };

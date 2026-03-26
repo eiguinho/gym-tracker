@@ -1,8 +1,21 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import WorkoutLog from '../models/WorkoutLog';
 import SleepLog from '../models/SleepLog';
 
-export const getDashboardStats = async (req: any, res: Response): Promise<any> => {
+interface PopulatedExercise {
+  targetMuscles?: string[];
+}
+
+interface PopulatedExerciseItem {
+  exercise?: PopulatedExercise;
+  sets?: number;
+}
+
+interface PopulatedWorkout {
+  exercises?: PopulatedExerciseItem[];
+}
+
+export const getDashboardStats = async (req: Request, res: Response): Promise<Response | void> => {
   try {
     const userId = req.user._id;
     const today = new Date();
@@ -37,9 +50,10 @@ export const getDashboardStats = async (req: any, res: Response): Promise<any> =
     const muscleVolume: Record<string, number> = {};
 
     completedLogs.forEach(log => {
-      const workout = log.workout as any;
+      const workout = log.workout as PopulatedWorkout;
+      
       if (workout && workout.exercises) {
-        workout.exercises.forEach((exItem: any) => {
+        workout.exercises.forEach((exItem) => {
           const exercise = exItem.exercise;
           if (exercise && exercise.targetMuscles) {
             exercise.targetMuscles.forEach((muscle: string) => {
@@ -75,7 +89,7 @@ export const getDashboardStats = async (req: any, res: Response): Promise<any> =
       avgMinutes = avgTotalMinutes % 60;
     }
 
-    res.json({
+    return res.json({
       summary: {
         activeHours: (totals.totalMinutes / 60).toFixed(1), 
         completedWorkouts: totals.totalWorkouts,
@@ -90,6 +104,6 @@ export const getDashboardStats = async (req: any, res: Response): Promise<any> =
     });
 
   } catch (error) {
-    res.status(500).json({ message: 'Erro ao buscar estatísticas', error });
+    return res.status(500).json({ message: 'Erro ao buscar estatísticas', error });
   }
 };

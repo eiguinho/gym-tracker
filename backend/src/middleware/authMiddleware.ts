@@ -6,14 +6,6 @@ interface TokenPayload {
   id: string;
 }
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: any;
-    }
-  }
-}
-
 export const protect = async (
   req: Request,
   res: Response,
@@ -33,7 +25,13 @@ export const protect = async (
         process.env.JWT_SECRET as string,
       ) as TokenPayload;
 
-      req.user = await User.findById(decoded.id).select('-passwordHash');
+      const currentUser = await User.findById(decoded.id).select('-passwordHash');
+
+      if (!currentUser) {
+        res.status(401).json({ message: 'Não autorizado, usuário não encontrado' });
+        return;
+      }
+      req.user = currentUser as Express.Request['user'];
 
       next();
     } catch (error) {
