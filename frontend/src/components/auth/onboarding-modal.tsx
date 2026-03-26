@@ -7,6 +7,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Trophy, Target } from 'lucide-react'
 import { toast } from 'sonner'
 import { usePathname } from 'next/navigation'
+import { getErrorMessage } from '@/utils/error-handler'
 
 const LEVEL_OPTIONS = [
   { id: 'iniciante', label: 'Iniciante', desc: 'Começando agora ou menos de 6 meses.' },
@@ -24,10 +25,14 @@ const FOCUS_OPTIONS = [
 
 export function OnboardingModal() {
   const pathname = usePathname()
-  const { user, setUser } = useAuth()
+  
+  const { user, updateUserSession } = useAuth()
+  
   const [loading, setLoading] = useState(false)
-  const [level, setLevel] = useState(LEVEL_OPTIONS[0].id)
-  const [focus, setFocus] = useState(FOCUS_OPTIONS[0].id)
+  const [formData, setFormData] = useState({
+    level: LEVEL_OPTIONS[0].id,
+    focus: FOCUS_OPTIONS[0].id
+  })
 
   if (!user || user.focus || !pathname.startsWith('/dashboard')) return null
 
@@ -35,15 +40,13 @@ export function OnboardingModal() {
     e.preventDefault()
     setLoading(true)
     try {
-      const data = await authService.updateProfile({ level, focus })
-      const updatedUser = { ...user, ...data.user, level, focus }
+      const data = await authService.updateProfile(formData)
+      const updatedUser = { ...user, ...data.user, ...formData }
       
-      setUser(updatedUser)
-      localStorage.setItem('@gymtracker:user', JSON.stringify(updatedUser))
+      updateUserSession(updatedUser)
       toast.success('Perfil configurado com sucesso!')
     } catch (error) {
-      console.error('Erro ao salvar onboarding', error)
-      toast.error('Ocorreu um erro ao salvar. Tente novamente.')
+      toast.error(getErrorMessage(error, 'Ocorreu um erro ao salvar. Tente novamente.'))
     } finally {
       setLoading(false)
     }
@@ -72,7 +75,7 @@ export function OnboardingModal() {
                 <label 
                   key={opt.id} 
                   className={`flex cursor-pointer flex-col rounded-lg border p-2.5 sm:p-3 transition-all ${
-                    level === opt.id ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                    formData.level === opt.id ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20' : 'border-gray-200 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -80,8 +83,8 @@ export function OnboardingModal() {
                       type="radio" 
                       name="level" 
                       value={opt.id} 
-                      checked={level === opt.id} 
-                      onChange={(e) => setLevel(e.target.value)} 
+                      checked={formData.level === opt.id} 
+                      onChange={(e) => setFormData(prev => ({ ...prev, level: e.target.value }))} 
                       className="text-indigo-600 focus:ring-indigo-600 h-4 w-4 shrink-0"
                     />
                     <span className="font-medium text-sm sm:text-base text-gray-900 dark:text-white">{opt.label}</span>
@@ -98,8 +101,8 @@ export function OnboardingModal() {
             </label>
             <select
               id="focus-select"
-              value={focus}
-              onChange={(e) => setFocus(e.target.value)}
+              value={formData.focus}
+              onChange={(e) => setFormData(prev => ({ ...prev, focus: e.target.value }))}
               className="flex h-11 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 dark:border-gray-700 dark:bg-gray-950 dark:text-white"
             >
               {FOCUS_OPTIONS.map(opt => (

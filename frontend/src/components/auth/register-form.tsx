@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Spinner } from '@/components/ui/spinner'
 import { User, Dumbbell, Flame, Zap, HeartPulse, Trophy } from 'lucide-react'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/utils/error-handler'
 
 const AVATARS = [
   { id: 'User', icon: User },
@@ -19,9 +20,8 @@ const AVATARS = [
 
 export function RegisterForm() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   
+  const [status, setStatus] = useState({ loading: false, error: '' })
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -31,17 +31,16 @@ export function RegisterForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
+    setStatus({ loading: true, error: '' })
 
     try {
       await authService.register(formData)
       toast.success('Conta criada! Verifique o código no seu e-mail.')
       router.push(`/verify?email=${encodeURIComponent(formData.email)}`)
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Erro ao criar conta. Tente novamente.'
+    } catch (error) {
+      const msg = getErrorMessage(error, 'Erro ao criar conta. Tente novamente.')
       toast.error(msg)
-      setLoading(false)
+      setStatus({ loading: false, error: msg })
     }
   }
 
@@ -99,10 +98,10 @@ export function RegisterForm() {
 
       <button
         type="submit"
-        disabled={loading}
+        disabled={status.loading}
         className="flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 transition-colors"
       >
-        {loading ? <Spinner /> : 'Criar Conta'}
+        {status.loading ? <Spinner /> : 'Criar Conta'}
       </button>
 
       <p className="text-center text-sm text-gray-600 dark:text-gray-400">

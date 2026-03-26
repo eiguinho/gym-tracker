@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useAuth } from '@/providers/auth-provider'
 import { Spinner } from '@/components/ui/spinner'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/utils/error-handler'
 
 export function VerifyForm() {
   const router = useRouter()
@@ -14,8 +15,7 @@ export function VerifyForm() {
   const { verifyAndSignIn } = useAuth()
 
   const [code, setCode] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [status, setStatus] = useState({ loading: false, error: '' })
 
   useEffect(() => {
     if (!email) {
@@ -25,16 +25,15 @@ export function VerifyForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
-    setLoading(true)
+    setStatus({ loading: true, error: '' })
 
     try {
       await verifyAndSignIn({ email, code })
       toast.success('E-mail verificado! Acesso liberado.')
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Código inválido. Verifique e tente novamente.'
+    } catch (error) {
+      const msg = getErrorMessage(error, 'Código inválido. Verifique e tente novamente.')
       toast.error(msg)
-      setLoading(false)
+      setStatus({ loading: false, error: msg })
     }
   }
 
@@ -64,10 +63,10 @@ export function VerifyForm() {
 
       <button
         type="submit"
-        disabled={loading || code.length !== 6}
+        disabled={status.loading || code.length !== 6}
         className="flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:opacity-50 transition-colors"
       >
-        {loading ? <Spinner /> : 'Validar e Entrar'}
+        {status.loading ? <Spinner /> : 'Validar e Entrar'}
       </button>
     </form>
   )

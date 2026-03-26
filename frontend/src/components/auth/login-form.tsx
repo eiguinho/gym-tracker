@@ -1,28 +1,31 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useAuth } from '@/providers/auth-provider'
 import { Input } from '@/components/ui/input'
+import { Spinner } from '@/components/ui/spinner'
 import Link from 'next/link'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/utils/error-handler'
 
 export function LoginForm() {
   const { signIn } = useAuth()
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  
   const [loading, setLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  })
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
 
     try {
-      await signIn({ email, password })
+      await signIn(formData)
       toast.success('Login realizado com sucesso! Bem-vindo.')
-    } catch (err: any) {
-      const msg = err.response?.data?.message || 'Falha na autenticação. Verifique seus dados.'
-      toast.error(msg)
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Falha na autenticação. Verifique seus dados.'))
       setLoading(false)
     }
   }
@@ -34,8 +37,8 @@ export function LoginForm() {
           label="E-mail"
           type="email"
           placeholder="exemplo@email.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={formData.email}
+          onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
           required
         />
         
@@ -43,8 +46,8 @@ export function LoginForm() {
           label="Senha"
           type="password"
           placeholder="********"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
+          value={formData.password}
+          onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
           required
         />
       </div>
@@ -55,7 +58,7 @@ export function LoginForm() {
           disabled={loading}
           className="group relative flex w-full justify-center rounded-lg bg-indigo-600 px-4 py-3 text-sm font-semibold text-white transition-all hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-70 disabled:cursor-not-allowed dark:focus:ring-offset-gray-900"
         >
-          {loading ? 'Carregando...' : 'Entrar'}
+          {loading ? <Spinner /> : 'Entrar'}
         </button>
       </div>
 

@@ -6,7 +6,17 @@ import api from '@/lib/api'
 import { authService } from '@/services/auth-service'
 import { User } from '@/types/auth'
 
-export const AuthContext = createContext({} as any) 
+interface AuthContextData {
+  user: User | null;
+  updateUserSession: (newUserData: User) => void;
+  isAuthenticated: boolean;
+  signIn: (credentials: Parameters<typeof authService.login>[0]) => Promise<void>;
+  verifyAndSignIn: (data: { email: string; code: string }) => Promise<void>;
+  signOut: () => void;
+  loading: boolean;
+}
+
+export const AuthContext = createContext({} as AuthContextData) 
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
@@ -19,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (token && savedUser) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`
-      setUser(JSON.parse(savedUser))
+      setUser(JSON.parse(savedUser) as User)
     }
     
     setLoading(false)
@@ -37,11 +47,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('@gymtracker:user', JSON.stringify(newUserData))
   }
 
-  async function signIn({ email, password }: any) {
+  async function signIn({ email, password }: Parameters<typeof authService.login>[0]) {
     try {
       const data = await authService.login({ email, password })
       
-      const userData = { 
+      const userData: User = { 
         id: data._id, 
         name: data.name, 
         email: data.email, 
@@ -63,7 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const data = await authService.verifyEmail({ email, code })
       
-      const userData = { 
+      const userData: User = { 
         id: data._id, 
         name: data.name, 
         email: data.email, 

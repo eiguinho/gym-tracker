@@ -3,6 +3,8 @@ export interface User {
   name: string;
   email: string;
   avatarIcon?: string;
+  level?: string;
+  focus?: string;
 }
 
 export interface LoginResponse {
