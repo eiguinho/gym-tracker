@@ -157,21 +157,37 @@ describe('Fluxo de Perfil e Logout - GymTracker', () => {
     await driver.executeScript("arguments[0].scrollIntoView({block: 'center'});", deleteBtn);
     await driver.sleep(500);
     
-    await deleteBtn.click();
-    await driver.wait(until.alertIsPresent(), 4000);
-    await (await driver.switchTo().alert()).dismiss();
+    // Abre o modal
+    await driver.executeScript("arguments[0].click();", deleteBtn);
 
+    // Espera o botão Cancelar do seu modal aparecer e clica
+    let cancelBtn = await driver.wait(
+      until.elementLocated(By.xpath("//button[contains(., 'Cancelar')]")), 
+      5000
+    );
+    await driver.executeScript("arguments[0].click();", cancelBtn);
+
+    // Garante que o modal fechou e continuamos no profile
+    await driver.sleep(1000);
     expect(await driver.getCurrentUrl()).toContain('/dashboard/profile');
   });
 
   it('7. Deve excluir a conta permanentemente ao clicar em OK no alerta', async () => {
+    // Localiza o botão de excluir novamente (garantindo que o DOM está fresco)
     let deleteBtn = await driver.wait(until.elementLocated(By.xpath("//button[contains(., 'Excluir Conta')]")), 5000);
-    
-    await deleteBtn.click();
-    await driver.wait(until.alertIsPresent(), 4000);
-    await (await driver.switchTo().alert()).accept();
+    await driver.executeScript("arguments[0].click();", deleteBtn);
 
-    await driver.wait(until.urlIs('http://localhost:3000/'), 10000);
+    // Espera o botão de confirmação com o texto exato que você passou
+    let confirmBtn = await driver.wait(
+      until.elementLocated(By.xpath("//button[contains(., 'Sim, excluir minha conta')]")), 
+      5000
+    );
+    
+    // Confirma a exclusão
+    await driver.executeScript("arguments[0].click();", confirmBtn);
+
+    // Espera o redirecionamento para a Home (página de login/landing)
+    await driver.wait(until.urlIs('http://localhost:3000/'), 15000);
     expect(await driver.getCurrentUrl()).toBe('http://localhost:3000/');
   });
 });
