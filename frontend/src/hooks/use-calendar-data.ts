@@ -1,55 +1,71 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { workoutService } from '@/services/workout-service'
 import { sleepService } from '@/services/sleep-service'
 import { Workout, WorkoutLog } from '@/types/workout'
 import { SleepLog } from '@/types/sleep'
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval } from 'date-fns'
 import { DragStartEvent, DragEndEvent } from '@dnd-kit/core'
+import { getErrorMessage } from '@/utils/error-handler'
 import { toast } from 'sonner'
 
 export function useCalendarData() {
-  const [currentDate, setCurrentDate] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
-
-  const [workouts, setWorkouts] = useState<Workout[]>([])
-  const [logs, setLogs] = useState<WorkoutLog[]>([])
-  const [sleepLogs, setSleepLogs] = useState<SleepLog[]>([])
-  
-  const [loading, setLoading] = useState(true)
-  const [isUpdating, setIsUpdating] = useState(false)
-  const [activeId, setActiveId] = useState<string | null>(null)
-
-  const monthStart = startOfMonth(currentDate)
-  const monthEnd = endOfMonth(monthStart)
-  const calendarDays = eachDayOfInterval({ 
-    start: startOfWeek(monthStart), 
-    end: endOfWeek(monthEnd) 
+  const [dates, setDates] = useState({
+    current: new Date(),
+    selected: new Date(),
   })
 
-  const fetchLogs = async () => setLogs(await workoutService.getCalendarLogs(monthStart, monthEnd))
-  const fetchSleep = async () => setSleepLogs(await sleepService.getLogs(monthStart, monthEnd))
+  const [data, setData] = useState({
+    workouts: [] as Workout[],
+    logs: [] as WorkoutLog[],
+    sleepLogs: [] as SleepLog[],
+  })
+  
+  const [status, setStatus] = useState({
+    loading: true,
+    isUpdating: false,
+  })
 
-  const loadData = async () => {
-    setLoading(true)
-    try {
-      const [workoutsData, logsData, sleepData] = await Promise.all([
-        workoutService.getAll(),
-        workoutService.getCalendarLogs(monthStart, monthEnd),
-        sleepService.getLogs(monthStart, monthEnd)
-      ])
-      setWorkouts(workoutsData)
-      setLogs(logsData)
-      setSleepLogs(sleepData)
-    } catch (error) {
-      console.error("Erro ao carregar dados", error)
-    } finally {
-      setLoading(false)
+  const [activeId, setActiveId] = useState<string | null>(null)
+
+  const { monthStart, monthEnd, calendarDays } = useMemo(() => {
+    const start = startOfMonth(dates.current)
+    const end = endOfMonth(start)
+    const days = eachDayOfInterval({ start: startOfWeek(start), end: endOfWeek(end) })
+    
+    return { monthStart: start, monthEnd: end, calendarDays: days }
+  }, [dates.current])
+
+  const fetchLogs = useCallback(async () => {
+    const newLogs = await workoutService.getCalendarLogs(monthStart, monthEnd)
+    setData(prev => ({ ...prev, logs: newLogs }))
+  }, [monthStart, monthEnd])
+
+  const fetchSleep = useCallback(async () => {
+    const newSleep = await sleepService.getLogs(monthStart, monthEnd)
+    setData(prev => ({ ...prev, sleepLogs: newSleep }))
+  }, [monthStart, monthEnd])
+
+  useEffect(() => {
+    async function loadAllData() {
+      setStatus(prev => ({ ...prev, loading: true }))
+      try {
+        const [workoutsData, logsData, sleepData] = await Promise.all([
+          workoutService.getAll(),
+          workoutService.getCalendarLogs(monthStart, monthEnd),
+          sleepService.getLogs(monthStart, monthEnd)
+        ])
+        setData({ workouts: workoutsData, logs: logsData, sleepLogs: sleepData })
+      } catch (error) {
+        toast.error(getErrorMessage(error, "Erro ao carregar os dados do calendário."))
+      } finally {
+        setStatus(prev => ({ ...prev, loading: false }))
+      }
     }
-  }
 
-  useEffect(() => { loadData() }, [currentDate])
+    loadAllData()
+  }, [monthStart, monthEnd])
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string)
@@ -64,68 +80,78 @@ export function useCalendarData() {
     const targetDate = over.data.current.date
     const dragType = active.data.current.type
 
-    setIsUpdating(true)
+    setStatus(prev => ({ ...prev, isUpdating: true }))
     try {
       if (dragType === 'sidebar-workout') {
         await workoutService.scheduleWorkout(active.data.current.workout._id, targetDate)
       } else if (dragType === 'scheduled-log') {
         await workoutService.moveCalendarLog(active.data.current.log._id, targetDate)
       }
+      
       await fetchLogs()
-      setSelectedDate(targetDate)
+      setDates(prev => ({ ...prev, selected: targetDate }))
       toast.success('Treino reprogramado!')
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Erro ao processar requisição')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Erro ao processar requisição'))
     } finally {
-      setIsUpdating(false)
+      setStatus(prev => ({ ...prev, isUpdating: false }))
     }
   }
 
   const handleDeleteLog = async (logId: string) => {
-    if (!confirm('Tem certeza que deseja remover este treino?')) return;
-    setIsUpdating(true)
+    setStatus(prev => ({ ...prev, isUpdating: true }))
     try {
       await workoutService.deleteCalendarLog(logId)
       await fetchLogs()
       toast.success('Treino removido do calendário.')
     } catch (error) {
-      toast.error('Erro ao remover o treino.')
+      toast.error(getErrorMessage(error, 'Erro ao remover o treino.'))
     } finally {
-      setIsUpdating(false)
+      setStatus(prev => ({ ...prev, isUpdating: false }))
     }
   }
 
   const handleDeleteSleep = async (sleepLogId: string) => {
-    if (!confirm('Tem certeza que deseja apagar o registro de sono?')) return;
-    setIsUpdating(true)
+    setStatus(prev => ({ ...prev, isUpdating: true }))
     try {
       await sleepService.delete(sleepLogId) 
       await fetchSleep()
       toast.success('Registro de sono removido.')
     } catch (error) {
-      toast.error('Erro ao excluir registro de sono.')
+      toast.error(getErrorMessage(error, 'Erro ao excluir registro de sono.'))
     } finally {
-      setIsUpdating(false)
+      setStatus(prev => ({ ...prev, isUpdating: false }))
     }
   }
 
   const handleScheduleWorkout = async (workoutId: string) => {
-    setIsUpdating(true)
+    setStatus(prev => ({ ...prev, isUpdating: true }))
     try {
-      await workoutService.scheduleWorkout(workoutId, selectedDate)
+      await workoutService.scheduleWorkout(workoutId, dates.selected)
       await fetchLogs()
       toast.success('Treino agendado com sucesso!')
-    } catch (error: any) {
-      toast.error('Erro ao agendar treino.')
+    } catch (error) {
+      toast.error(getErrorMessage(error, 'Erro ao agendar treino.'))
     } finally {
-      setIsUpdating(false)
+      setStatus(prev => ({ ...prev, isUpdating: false }))
     }
   }
 
   return {
-    currentDate, setCurrentDate, selectedDate, setSelectedDate,
-    workouts, logs, sleepLogs, loading, isUpdating, monthStart, calendarDays,
-    handleDragStart, handleDragEnd, activeId,
+    currentDate: dates.current, 
+    setCurrentDate: (d: Date) => setDates(prev => ({ ...prev, current: d })), 
+    selectedDate: dates.selected, 
+    setSelectedDate: (d: Date) => setDates(prev => ({ ...prev, selected: d })),
+    
+    workouts: data.workouts, 
+    logs: data.logs, 
+    sleepLogs: data.sleepLogs, 
+    
+    loading: status.loading, 
+    isUpdating: status.isUpdating, 
+    
+    monthStart, calendarDays, activeId,
+    handleDragStart, handleDragEnd,
     handleDeleteLog, handleDeleteSleep, handleScheduleWorkout,
     fetchLogs, fetchSleep
   }

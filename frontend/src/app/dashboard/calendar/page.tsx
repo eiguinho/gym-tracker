@@ -14,6 +14,7 @@ import { WorkoutSidebar } from '@/components/calendar/workout-sidebar'
 import { CalendarGrid } from '@/components/calendar/calendar-grid'
 import { DaySummary } from '@/components/calendar/day-summary' 
 import { ScheduleWorkoutModal } from '@/components/calendar/schedule-workout-modal'
+import { AlertModal } from '@/components/ui/alert-modal'
 import { useCalendarData } from '@/hooks/use-calendar-data'
 
 export default function CalendarPage() {
@@ -26,21 +27,38 @@ export default function CalendarPage() {
   } = useCalendarData()
 
   const [selectedLogForCheckIn, setSelectedLogForCheckIn] = useState<WorkoutLog | null>(null)
-  const [isSleepModalOpen, setIsSleepModalOpen] = useState(false)
-  const [selectedDayForSleep, setSelectedDayForSleep] = useState<Date | null>(null)
-  const [selectedSleepLog, setSelectedSleepLog] = useState<SleepLog | undefined>(undefined)
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false)
-  const [isAlreadyRegistered, setIsAlreadyRegistered] = useState(false)
+  
+  const [logToDelete, setLogToDelete] = useState<string | null>(null)
+
+  const [sleepModal, setSleepModal] = useState<{
+    isOpen: boolean;
+    day: Date | null;
+    log?: SleepLog;
+    isAlreadyRegistered: boolean;
+  }>({ isOpen: false, day: null, isAlreadyRegistered: false })
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const selectedDayLogs = logs.filter(log => isSameDay(new Date(log.date), selectedDate))
   const selectedDaySleepLog = sleepLogs.find(log => isSameDay(new Date(log.date), selectedDate))
-
-  const activeWorkouts = workouts.filter(w => w.isActive);
+  const activeWorkouts = workouts.filter(w => w.isActive)
 
   const activeWorkout = activeWorkouts.find(w => w._id === activeId) || 
-                        logs.find(l => l._id === activeId)?.workout;
+                        logs.find(l => l._id === activeId)?.workout
+
+  const handleOpenSleepModal = (day: Date, existingLog?: SleepLog) => {
+    const yesterday = new Date(day)
+    yesterday.setDate(yesterday.getDate() - 1)
+    const hasMoonYesterday = sleepLogs.some(log => isSameDay(new Date(log.date), yesterday))
+
+    setSleepModal({
+      isOpen: true,
+      day,
+      log: existingLog,
+      isAlreadyRegistered: hasMoonYesterday
+    })
+  }
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -68,20 +86,9 @@ export default function CalendarPage() {
                 onDayClick={setSelectedDate} 
                 onPrevMonth={() => setCurrentDate(subMonths(currentDate, 1))}
                 onNextMonth={() => setCurrentDate(addMonths(currentDate, 1))}
-                onDeleteLog={handleDeleteLog}
+                onDeleteLog={(id) => setLogToDelete(id)}
                 onClickLog={setSelectedLogForCheckIn}
-                onClickSleep={(day, existingLog) => {
-                  setSelectedDayForSleep(day)
-                  setSelectedSleepLog(existingLog)
-                  const yesterday = new Date(day);
-                  yesterday.setDate(yesterday.getDate() - 1);
-
-                  const hasMoonYesterday = sleepLogs.some(log => 
-                    isSameDay(new Date(log.date), yesterday)
-                  );
-                  setIsAlreadyRegistered(hasMoonYesterday)
-                  setIsSleepModalOpen(true)
-                }}
+                onClickSleep={handleOpenSleepModal}
               />
 
               <DaySummary 
@@ -98,18 +105,19 @@ export default function CalendarPage() {
         </div>
         
         <CheckInModal 
-          isOpen={!!selectedLogForCheckIn} log={selectedLogForCheckIn}
+          isOpen={!!selectedLogForCheckIn} 
+          log={selectedLogForCheckIn}
           onClose={() => setSelectedLogForCheckIn(null)}
           onSuccess={() => { setSelectedLogForCheckIn(null); fetchLogs(); }}
         />
 
         <SleepModal 
-          isOpen={isSleepModalOpen} 
-          day={selectedDayForSleep} 
-          existingLog={selectedSleepLog}
-          isNightAlreadyRegistered={isAlreadyRegistered}
-          onClose={() => setIsSleepModalOpen(false)}
-          onSuccess={() => { setIsSleepModalOpen(false); fetchSleep(); }}
+          isOpen={sleepModal.isOpen} 
+          day={sleepModal.day} 
+          existingLog={sleepModal.log}
+          isNightAlreadyRegistered={sleepModal.isAlreadyRegistered}
+          onClose={() => setSleepModal(prev => ({ ...prev, isOpen: false }))}
+          onSuccess={() => { setSleepModal(prev => ({ ...prev, isOpen: false })); fetchSleep(); }}
         />
 
         <ScheduleWorkoutModal 
@@ -131,6 +139,20 @@ export default function CalendarPage() {
             </div>
           )}
         </DragOverlay>
+
+        <AlertModal
+          isOpen={!!logToDelete}
+          onClose={() => setLogToDelete(null)}
+          onConfirm={() => {
+            if (logToDelete) {
+              handleDeleteLog(logToDelete);
+              setLogToDelete(null);
+            }
+          }}
+          title="Remover Treino"
+          description="Tem certeza que deseja remover este treino do calendário?"
+          confirmText="Sim, remover"
+        />
 
       </div>
     </DndContext>

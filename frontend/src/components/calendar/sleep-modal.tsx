@@ -5,7 +5,7 @@ import { Modal } from '@/components/ui/modal'
 import { Input } from '@/components/ui/input'
 import { SleepLog } from '@/types/sleep'
 import { sleepService } from '@/services/sleep-service'
-import { Moon, Save } from 'lucide-react'
+import { Frown, BatteryLow, Meh, Smile, Zap, Moon, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
 
@@ -19,11 +19,11 @@ interface SleepModalProps {
 }
 
 const QUALITY_OPTIONS = [
-  { value: 1, label: 'Péssimo', emoji: '😫' },
-  { value: 2, label: 'Cansado', emoji: '🥱' },
-  { value: 3, label: 'Normal', emoji: '😐' },
-  { value: 4, label: 'Bem', emoji: '😌' },
-  { value: 5, label: 'Revigorado', emoji: '🤩' },
+  { value: 1, label: 'Péssimo', icon: Frown, color: 'text-red-500' },
+  { value: 2, label: 'Cansado', icon: BatteryLow, color: 'text-orange-400' },
+  { value: 3, label: 'Normal', icon: Meh, color: 'text-yellow-500' },
+  { value: 4, label: 'Bem', icon: Smile, color: 'text-green-500' },
+  { value: 5, label: 'Perfeito', icon: Zap, color: 'text-blue-500' },
 ]
 
 export function SleepModal({ 
@@ -145,7 +145,10 @@ export function SleepModal({
                   }
                 `}
               >
-                <span className="text-2xl mb-1">{option.emoji}</span>
+                <option.icon 
+                  className={`mb-2 ${qualityScore === option.value ? option.color : 'text-gray-400'}`} 
+                  size={24} 
+                />
                 <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
                   {option.label}
                 </span>
