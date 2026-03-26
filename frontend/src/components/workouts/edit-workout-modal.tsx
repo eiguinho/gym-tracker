@@ -16,13 +16,17 @@ interface EditWorkoutModalProps {
   onSuccess: () => void 
 }
 
+const INITIAL_FORM_STATE = {
+  title: '',
+  exercises: [{ exercise: '', sets: 3, minReps: 8, maxReps: 12 }]
+}
+
 export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: EditWorkoutModalProps) {
   const [loading, setLoading] = useState(false)
   const [fetching, setFetching] = useState(false) 
   const [availableExercises, setAvailableExercises] = useState<Exercise[]>([])
   
-  const [title, setTitle] = useState('')
-  const [workoutExercises, setWorkoutExercises] = useState([{ exercise: '', sets: 3, minReps: 8, maxReps: 12 }])
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE)
 
   useEffect(() => {
     async function loadData() {
@@ -36,7 +40,6 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
         ])
         
         setAvailableExercises(exercisesData)
-        setTitle(workoutData.title)
 
         const formattedExercises = workoutData.exercises.map(item => {
           const [min, max] = item.reps.split('-')
@@ -48,9 +51,11 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
           }
         })
 
-        setWorkoutExercises(formattedExercises)
+        setFormData({
+          title: workoutData.title,
+          exercises: formattedExercises
+        })
       } catch (error) {
-        console.error('Erro ao carregar dados do treino', error)
         toast.error('Erro ao carregar dados do treino.')
         onClose()
       } finally {
@@ -58,21 +63,30 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
       }
     }
 
-    if (isOpen) {
-      loadData()
-    } else {
-      setTitle('')
-      setWorkoutExercises([{ exercise: '', sets: 3, minReps: 8, maxReps: 12 }])
-    }
+    if (isOpen) loadData()
+    else setFormData(INITIAL_FORM_STATE)
   }, [isOpen, workoutId, onClose])
 
-  const addExerciseRow = () => setWorkoutExercises([...workoutExercises, { exercise: '', sets: 3, minReps: 8, maxReps: 12 }])
-  const removeExerciseRow = (idx: number) => setWorkoutExercises(workoutExercises.filter((_, i) => i !== idx))
+  const addExerciseRow = () => {
+    setFormData(prev => ({
+      ...prev,
+      exercises: [...prev.exercises, { exercise: '', sets: 3, minReps: 8, maxReps: 12 }]
+    }))
+  }
+
+  const removeExerciseRow = (idx: number) => {
+    setFormData(prev => ({
+      ...prev,
+      exercises: prev.exercises.filter((_, i) => i !== idx)
+    }))
+  }
   
   const handleExerciseChange = (index: number, field: string, value: string | number) => {
-    const updated = [...workoutExercises]
-    updated[index] = { ...updated[index], [field]: value }
-    setWorkoutExercises(updated)
+    setFormData(prev => {
+      const updatedExercises = [...prev.exercises]
+      updatedExercises[index] = { ...updatedExercises[index], [field]: value }
+      return { ...prev, exercises: updatedExercises }
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,7 +95,7 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
 
     setLoading(true)
     try {
-      const validExercises = workoutExercises.filter(item => item.exercise !== '')
+      const validExercises = formData.exercises.filter(item => item.exercise !== '')
       
       if (new Set(validExercises.map(item => item.exercise)).size !== validExercises.length) {
         return toast.warning('Remova os exercícios duplicados antes de salvar.')
@@ -97,7 +111,7 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
         reps: `${item.minReps}-${item.maxReps}`
       }))
 
-      await workoutService.update(workoutId, { title, exercises: formattedForAPI })
+      await workoutService.update(workoutId, { title: formData.title, exercises: formattedForAPI })
       toast.success('Treino atualizado com sucesso!')
       onSuccess()
     } catch (error) {
@@ -128,8 +142,8 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
           <Input 
             label="Nome da Rotina"
             placeholder="Ex: Treino A - Peito e Tríceps" 
-            value={title} 
-            onChange={(e) => setTitle(e.target.value)} 
+            value={formData.title} 
+            onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))} 
             maxLength={50} 
             required 
           />
@@ -140,16 +154,16 @@ export function EditWorkoutModal({ isOpen, workoutId, onClose, onSuccess }: Edit
             </label>
 
             <div className="space-y-3">
-              {workoutExercises.map((row, index) => (
+              {formData.exercises.map((row, index) => (
                 <ExerciseFormRow 
                   key={index} 
                   index={index} 
                   row={row} 
                   groupedExercises={groupedExercises}
-                  allSelectedExercises={workoutExercises.map(ex => ex.exercise)}
+                  allSelectedExercises={formData.exercises.map(ex => ex.exercise)}
                   onChange={handleExerciseChange} 
                   onRemove={removeExerciseRow} 
-                  canRemove={workoutExercises.length > 1}
+                  canRemove={formData.exercises.length > 1}
                 />
               ))}
             </div>

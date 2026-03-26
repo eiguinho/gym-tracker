@@ -15,13 +15,16 @@ interface CreateWorkoutModalProps {
   onSuccess: () => void 
 }
 
+const INITIAL_FORM_STATE = {
+  title: '',
+  exercises: [{ exercise: '', sets: 3, minReps: 8, maxReps: 12 }]
+}
+
 export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkoutModalProps) {
   const [loading, setLoading] = useState(false)
-  
   const [groupedExercises, setGroupedExercises] = useState<Record<string, Exercise[]>>({})
   
-  const [title, setTitle] = useState('')
-  const [workoutExercises, setWorkoutExercises] = useState([{ exercise: '', sets: 3, minReps: 8, maxReps: 12 }])
+  const [formData, setFormData] = useState(INITIAL_FORM_STATE)
 
   useEffect(() => {
     if (isOpen) {
@@ -41,18 +44,30 @@ export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkout
         setGroupedExercises(sortedGroups)
       }).catch(console.error)
     } else {
-      setTitle('')
-      setWorkoutExercises([{ exercise: '', sets: 3, minReps: 8, maxReps: 12 }])
+      setFormData(INITIAL_FORM_STATE)
     }
   }, [isOpen])
 
-  const addExerciseRow = () => setWorkoutExercises([...workoutExercises, { exercise: '', sets: 3, minReps: 8, maxReps: 12 }])
-  const removeExerciseRow = (idx: number) => setWorkoutExercises(workoutExercises.filter((_, i) => i !== idx))
+  const addExerciseRow = () => {
+    setFormData(prev => ({
+      ...prev,
+      exercises: [...prev.exercises, { exercise: '', sets: 3, minReps: 8, maxReps: 12 }]
+    }))
+  }
+
+  const removeExerciseRow = (idx: number) => {
+    setFormData(prev => ({
+      ...prev,
+      exercises: prev.exercises.filter((_, i) => i !== idx)
+    }))
+  }
   
   const handleExerciseChange = (index: number, field: string, value: string | number) => {
-    const updated = [...workoutExercises]
-    updated[index] = { ...updated[index], [field]: value }
-    setWorkoutExercises(updated)
+    setFormData(prev => {
+      const updatedExercises = [...prev.exercises]
+      updatedExercises[index] = { ...updatedExercises[index], [field]: value }
+      return { ...prev, exercises: updatedExercises }
+    })
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -60,10 +75,10 @@ export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkout
     setLoading(true)
 
     try {
-      const validExercises = workoutExercises.filter(item => item.exercise !== '')
+      const validExercises = formData.exercises.filter(item => item.exercise !== '')
       
       if (new Set(validExercises.map(item => item.exercise)).size !== validExercises.length) {
-        toast.warning('Remova os exercícios duplicados ou adicione novos.')
+        return toast.warning('Remova os exercícios duplicados ou adicione novos.')
       }
       
       if (validExercises.length === 0) {
@@ -74,8 +89,8 @@ export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkout
         exercise: item.exercise, sets: item.sets, reps: `${item.minReps}-${item.maxReps}`
       }))
 
-      await workoutService.create({ title, exercises: formatted })
-      toast.success('Nova rotina de treino criada! 💪')
+      await workoutService.create({ title: formData.title, exercises: formatted })
+      toast.success('Nova rotina de treino criada!')
       onSuccess()
     } catch (error) {
       toast.error('Erro ao criar treino. Tente novamente.')
@@ -91,8 +106,8 @@ export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkout
         <Input 
           label="Nome da Rotina"
           placeholder="Ex: Treino A - Peito e Tríceps" 
-          value={title} 
-          onChange={(e) => setTitle(e.target.value)} 
+          value={formData.title} 
+          onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))} 
           maxLength={50} 
           required 
         />
@@ -103,16 +118,16 @@ export function CreateWorkoutModal({ isOpen, onClose, onSuccess }: CreateWorkout
           </label>
 
           <div className="space-y-3">
-            {workoutExercises.map((row, index) => (
+            {formData.exercises.map((row, index) => (
               <ExerciseFormRow 
                 key={index} 
                 index={index} 
                 row={row} 
                 groupedExercises={groupedExercises} 
-                allSelectedExercises={workoutExercises.map(ex => ex.exercise)}
+                allSelectedExercises={formData.exercises.map(ex => ex.exercise)}
                 onChange={handleExerciseChange} 
                 onRemove={removeExerciseRow} 
-                canRemove={workoutExercises.length > 1}
+                canRemove={formData.exercises.length > 1}
               />
             ))}
           </div>
