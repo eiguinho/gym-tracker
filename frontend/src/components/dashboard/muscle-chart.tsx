@@ -1,19 +1,12 @@
 'use client'
 
-import {
-  Radar,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  ResponsiveContainer,
-  Tooltip
-} from 'recharts'
+import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } from 'recharts'
 import { Target } from 'lucide-react'
 import { ChartCard } from '@/components/ui/chart-card'
+import { MuscleDataPoint } from '@/types/dashboard'
 
 interface MuscleChartProps {
-  data?: Array<{ subject: string; A: number }>
+  data?: MuscleDataPoint[]
 }
 
 export function MuscleChart({ data }: MuscleChartProps) {
@@ -37,9 +30,17 @@ export function MuscleChart({ data }: MuscleChartProps) {
               />
               <PolarRadiusAxis angle={30} domain={[0, 'auto']} tick={false} axisLine={false} />
               <Tooltip 
-                contentStyle={{ borderRadius: '8px', border: 'none', backgroundColor: '#1f2937', color: '#fff' }}
+                contentStyle={{ 
+                  borderRadius: '8px', 
+                  border: 'none', 
+                  backgroundColor: '#1f2937', 
+                  color: '#fff' 
+                }}
                 itemStyle={{ color: '#818cf8' }}
-                formatter={(value: any) => [`${value} Séries`, 'Volume']}
+                formatter={(value) => {
+                  const displayValue = value ? String(value) : '0';
+                  return [displayValue + ' Séries', 'Volume'];
+                }}
               />
               <Radar
                 name="Volume"

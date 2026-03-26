@@ -1,21 +1,15 @@
 'use client'
 
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip
-} from 'recharts'
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip } from 'recharts'
 import { Activity } from 'lucide-react'
 import { ChartCard } from '@/components/ui/chart-card'
 import { ChartTooltip } from '@/components/ui/chart-tooltip'
 import { format, subDays, eachDayOfInterval, isSameDay, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
+import { ActivityDataPoint } from '@/types/dashboard'
 
 interface ActivityChartProps {
-  data?: Array<{ _id: string; minutes: number }>
+  data?: ActivityDataPoint[]
 }
 
 export function ActivityChart({ data }: ActivityChartProps) {

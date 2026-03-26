@@ -2,17 +2,11 @@
 
 import { CalendarDays, Activity, Moon } from 'lucide-react'
 import { StatCard } from '@/components/ui/stat-card'
+import { DashboardSummary, SleepData } from '@/types/dashboard'
 
 interface StatsGridProps {
-  summary?: {
-    activeHours: string;
-    completedWorkouts: number;
-  };
-  sleepData?: {
-    hasLogs: boolean;
-    score: number;
-    averageText: string;
-  };
+  summary?: DashboardSummary;
+  sleepData?: SleepData;
 }
 
 export function StatsGrid({ summary, sleepData }: StatsGridProps) {
@@ -27,20 +21,12 @@ export function StatsGrid({ summary, sleepData }: StatsGridProps) {
         value={summary?.completedWorkouts?.toString() || "0"}
         subtitle="/ 30 dias"
         icon={<CalendarDays size={24} />}
-        footer={
-          <span className="text-primary">
-            Dados do mês atual
-          </span>
-        }
+        footer={<span className="text-primary">Dados do mês atual</span>}
       />
 
       <StatCard
         title="Horas Ativas"
-        value={
-          <>
-            {summary?.activeHours || "0.0"}<span className="text-base">h</span>
-          </>
-        }
+        value={<>{summary?.activeHours || "0.0"}<span className="text-base">h</span></>}
         icon={<Activity size={24} />}
         footer={`Média de ${avgSession}h por sessão`}
       />
