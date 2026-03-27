@@ -1,6 +1,9 @@
 import { Request, Response } from 'express';
 import WorkoutLog from '../models/WorkoutLog';
 import SleepLog from '../models/SleepLog';
+import { FeedbackEngine } from '../services/FeedbackEngine';
+import { PopulatedWorkout } from '../types/dashboard';
+import { IUser } from '../models/User';
 
 interface PopulatedExercise {
   targetMuscles?: string[];
@@ -11,13 +14,11 @@ interface PopulatedExerciseItem {
   sets?: number;
 }
 
-interface PopulatedWorkout {
-  exercises?: PopulatedExerciseItem[];
-}
-
 export const getDashboardStats = async (req: Request, res: Response): Promise<Response | void> => {
   try {
-    const userId = req.user._id;
+    const user = req.user as IUser;
+    const userId = user._id;
+    
     const today = new Date();
     
     const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -27,14 +28,37 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<Re
     sevenDaysAgo.setUTCHours(0, 0, 0, 0);
 
     const summary = await WorkoutLog.aggregate([
-      { $match: { user: userId, status: 'completed', date: { $gte: startOfCurrentMonth, $lte: today } } },
-      { $group: { _id: null, totalWorkouts: { $sum: 1 }, totalMinutes: { $sum: "$durationMinutes" } } }
+      { 
+        $match: { 
+          user: userId, 
+          status: 'completed', 
+          date: { $gte: startOfCurrentMonth, $lte: today } 
+        } 
+      },
+      { 
+        $group: { 
+          _id: null, 
+          totalWorkouts: { $sum: 1 }, 
+          totalMinutes: { $sum: "$durationMinutes" } 
+        } 
+      }
     ]);
     const totals = summary[0] || { totalWorkouts: 0, totalMinutes: 0 };
 
     const dailyData = await WorkoutLog.aggregate([
-      { $match: { user: userId, status: 'completed', date: { $gte: sevenDaysAgo, $lte: today } } },
-      { $group: { _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } }, minutes: { $sum: "$durationMinutes" } } },
+      { 
+        $match: { 
+          user: userId, 
+          status: 'completed', 
+          date: { $gte: sevenDaysAgo, $lte: today } 
+        } 
+      },
+      { 
+        $group: { 
+          _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } }, 
+          minutes: { $sum: "$durationMinutes" } 
+        } 
+      },
       { $sort: { _id: 1 } }
     ]);
 
@@ -50,10 +74,10 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<Re
     const muscleVolume: Record<string, number> = {};
 
     completedLogs.forEach(log => {
-      const workout = log.workout as PopulatedWorkout;
+      const workout = log.workout as unknown as PopulatedWorkout;
       
       if (workout && workout.exercises) {
-        workout.exercises.forEach((exItem) => {
+        workout.exercises.forEach((exItem: PopulatedExerciseItem) => {
           const exercise = exItem.exercise;
           if (exercise && exercise.targetMuscles) {
             exercise.targetMuscles.forEach((muscle: string) => {
@@ -89,6 +113,17 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<Re
       avgMinutes = avgTotalMinutes % 60;
     }
 
+    const insightFeedback = FeedbackEngine.generate(
+      completedLogs, 
+      muscleData, 
+      {
+        hasLogs: sleepLogs.length > 0,
+        score: sleepScore,
+        averageText: `${avgHours}h ${avgMinutes}m`
+      },
+      user
+    );
+
     return res.json({
       summary: {
         activeHours: (totals.totalMinutes / 60).toFixed(1), 
@@ -100,10 +135,15 @@ export const getDashboardStats = async (req: Request, res: Response): Promise<Re
         hasLogs: sleepLogs.length > 0,
         score: sleepScore,
         averageText: `${avgHours}h ${avgMinutes}m`,
-      }
+      },
+      insights: insightFeedback
     });
 
   } catch (error) {
-    return res.status(500).json({ message: 'Erro ao buscar estatísticas', error });
+    console.error("Erro no Dashboard Controller:", error);
+    return res.status(500).json({ 
+      message: 'Erro ao buscar estatísticas do dashboard', 
+      error: error instanceof Error ? error.message : error 
+    });
   }
 };
