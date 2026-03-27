@@ -25,3 +25,17 @@ export interface DashboardStats {
   chartData: ActivityDataPoint[];
   muscleData: MuscleDataPoint[];
 }
+
+export interface Insight {
+  type: 'success' | 'warning' | 'info';
+  message: string;
+  icon: string;
+}
+
+export interface DashboardStats {
+  summary: DashboardSummary;
+  sleepData: SleepData;
+  chartData: ActivityDataPoint[];
+  muscleData: MuscleDataPoint[];
+  insights: Insight[];
+}

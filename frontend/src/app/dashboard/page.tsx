@@ -10,6 +10,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { workoutService } from '@/services/workout-service'
 import Link from 'next/link'
 import { DashboardStats } from '@/types/dashboard'
+import { InsightCard } from '@/components/ui/insight-card'
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -34,28 +35,36 @@ export default function DashboardPage() {
   }, [])
 
   const renderContent = () => {
-    if (loading) {
-      return <div className="flex justify-center py-20"><Spinner /></div>
-    }
-
-    if (error) {
-      return (
-        <div className="flex justify-center py-10 text-red-500 font-medium">
-          {error}
-        </div>
-      )
-    }
-
+    if (loading) return <div className="flex justify-center py-20"><Spinner /></div>
+    if (error) return <div className="flex justify-center py-10 text-red-500 font-medium">{error}</div>
     if (!stats) return null;
 
     return (
-      <>
+      <div className="space-y-8">
         <StatsGrid summary={stats.summary} sleepData={stats.sleepData} />
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
           <ActivityChart data={stats.chartData} />
           <MuscleChart data={stats.muscleData} />
         </div>
-      </>
+
+        {stats.insights && stats.insights.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="text-lg font-semibold text-foreground/80 ml-1">
+              Análise de Performance
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {stats.insights.map((item, index) => (
+                <InsightCard 
+                  key={index}
+                  type={item.type}
+                  message={item.message}
+                  icon={item.icon}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
     )
   }
 
